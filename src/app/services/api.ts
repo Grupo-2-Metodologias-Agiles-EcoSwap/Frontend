@@ -456,4 +456,12 @@ export class ApiService {
   createReport(report: { reportedUserId?: number | string; productId?: number | string; reason: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/reports`, report);
   }
+
+  moderateProduct(product: { title: string; description?: string; category?: string; imagesBase64?: string[] }): Observable<{ allowed: boolean; reason: string; category: string | null }> {
+    return this.http.post<{ allowed: boolean; reason: string; category: string | null }>(`${this.apiUrl}/ai/moderate-product`, product);
+  }
+
+  moderateMessage(content: string): Observable<{ allowed: boolean; reason: string; category: string | null }> {
+    return this.http.post<{ allowed: boolean; reason: string; category: string | null }>(`${this.apiUrl}/ai/moderate-message`, { content });
+  }
 }

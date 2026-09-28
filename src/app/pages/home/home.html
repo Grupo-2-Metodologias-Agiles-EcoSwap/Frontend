@@ -81,6 +81,26 @@
       <div class="lg:col-span-2 space-y-6">
         <!-- Sell Action Block -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          
+          <!-- Banner de Alerta de Moderación IA Gemini en Feed de Inicio -->
+          <div *ngIf="moderationError" class="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 shadow-sm flex items-start gap-3 animate-fade-in">
+            <span class="material-icons text-amber-600 mt-0.5">security_update_warning</span>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-amber-900 text-sm">Publicación no permitida</h4>
+                <span *ngIf="moderationCategory" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-200 text-amber-800">
+                  {{ moderationCategory }}
+                </span>
+              </div>
+              <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                {{ moderationError }}
+              </p>
+            </div>
+            <button type="button" (click)="moderationError = null" class="text-amber-500 hover:text-amber-700">
+              <span class="material-icons text-sm">close</span>
+            </button>
+          </div>
+
           <div class="flex items-start gap-3">
             <div
               class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0"

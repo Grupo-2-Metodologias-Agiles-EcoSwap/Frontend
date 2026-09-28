@@ -20,6 +20,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   messages: Message[] = [];
   currentUser: User | null = null;
   newMessageText = '';
+  chatModerationWarning: string | null = null;
+  isSendingMessage: boolean = false;
   
   // Meetup modal state
   showMeetupModal = false;
@@ -133,33 +135,44 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   sendMessage() {
     if (!this.newMessageText.trim() || !this.activeChat || !this.currentUser) return;
-    if (this.isProductSold(this.activeChat)) return; // Prevent sending if sold
+    if (this.isProductSold(this.activeChat)) return;
 
     const text = this.newMessageText.trim();
-    this.newMessageText = ''; // Clear immediately for better UX
-    
-    this.chatService.sendMessage(this.activeChat.id, this.currentUser.id, text)
-      .subscribe(() => {
-        // Also create a notification for the other user (only if one doesn't exist unread for this chat)
-        const currentUserId = String(this.currentUser!.id);
-        const otherUserId = this.activeChat!.participants.find(id => String(id) !== currentUserId);
-        if (otherUserId) {
-          this.apiService.getNotifications(otherUserId).subscribe(notifs => {
-            const hasUnread = notifs.some(n => n.type === 'message' && String(n.chatId) === String(this.activeChat!.id) && !n.read);
-            if (!hasUnread) {
-              const productTitle = this.chatDetails.get(String(this.activeChat!.id))?.product.title || 'un producto';
-              this.apiService.createNotification({
-                userId: otherUserId,
-                type: 'message',
-                chatId: this.activeChat!.id,
-                text: `${this.currentUser!.name} te ha enviado un mensaje sobre ${productTitle}`,
-                read: false,
-                createdAt: new Date().toISOString()
-              }).subscribe();
-            }
-          });
+    this.newMessageText = ''; // Limpieza instantánea para feedback inmediato
+    this.chatModerationWarning = null;
+
+    // Enviar directamente sin bloquear la UI del usuario
+    this.chatService.sendMessage(this.activeChat.id, this.currentUser.id, text).subscribe({
+      next: () => {
+        this.sendNotificationAfterMessage();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error enviando mensaje:', err);
+      }
+    });
+  }
+
+  private sendNotificationAfterMessage() {
+    if (!this.currentUser || !this.activeChat) return;
+    const currentUserId = String(this.currentUser.id);
+    const otherUserId = this.activeChat.participants.find(id => String(id) !== currentUserId);
+    if (otherUserId) {
+      this.apiService.getNotifications(otherUserId).subscribe(notifs => {
+        const hasUnread = notifs.some(n => n.type === 'message' && String(n.chatId) === String(this.activeChat!.id) && !n.read);
+        if (!hasUnread) {
+          const productTitle = this.chatDetails.get(String(this.activeChat!.id))?.product.title || 'un producto';
+          this.apiService.createNotification({
+            userId: otherUserId,
+            type: 'message',
+            chatId: this.activeChat!.id,
+            text: `${this.currentUser!.name} te ha enviado un mensaje sobre ${productTitle}`,
+            read: false,
+            createdAt: new Date().toISOString()
+          }).subscribe();
         }
       });
+    }
   }
 
   openMeetupModal() {

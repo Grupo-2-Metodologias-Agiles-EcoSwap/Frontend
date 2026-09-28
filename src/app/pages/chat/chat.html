@@ -160,6 +160,18 @@
 
       </div>
 
+      
+      <!-- Aviso de moderación IA en Chat -->
+      <div *ngIf="chatModerationWarning" class="mx-3 mb-2 p-2.5 rounded-xl bg-red-50 border border-red-200 flex items-center justify-between gap-2 text-xs text-red-700 shadow-sm animate-fade-in">
+        <div class="flex items-center gap-1.5">
+          <span class="material-icons text-red-500 text-sm">shield</span>
+          <span><strong>Mensaje bloqueado:</strong> {{ chatModerationWarning }}</span>
+        </div>
+        <button type="button" (click)="chatModerationWarning = null" class="text-red-400 hover:text-red-600">
+          <span class="material-icons text-sm">close</span>
+        </button>
+      </div>
+
       <!-- Message Input -->
       <div class="p-3 bg-[#f0f2f5] border-t border-gray-200">
         <form (ngSubmit)="sendMessage()" class="flex items-center space-x-2">
