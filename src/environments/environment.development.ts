@@ -1,5 +1,8 @@
 export const environment = {
   production: false,
+  apiUrl: 'http://localhost:5001',
+  supabaseUrl: 'https://wsgeeshfilnruudmemcl.supabase.co',
+  supabaseKey: 'sb_publishable_6dPY7ngU3EzfgdsI-NOf2g_i0TGNP5e',
   platformProviderApiBaseUrl: 'http://localhost:3001/api/v1',
   tripoApiKey: 'tsk_ImOf66o26CoZYR3V5O3PyrPElezTBwSTF3E0--g2n8o',
   platformProviderUsersEndpointPath: '/users',
@@ -12,3 +15,4 @@ export const environment = {
   platformProviderReputationsEndpointPath: '/reputations',
   platformProviderReportsEndpointPath: '/reports',
 };
+

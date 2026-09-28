@@ -19,22 +19,17 @@ export class Favorites implements OnInit {
   constructor(private apiService: ApiService, private authService: AuthService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      if (!user) return;
-      const favoriteIds = user.favorites || [];
-      
-      this.apiService.getProducts().subscribe({
-        next: (allProducts) => {
-          this.products = allProducts.filter(p => favoriteIds.map(String).includes(String(p.id)));
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('Error fetching products', err);
-          this.loading = false;
-          this.cdr.detectChanges();
-        }
-      });
+    this.apiService.getMyFavorites().subscribe({
+      next: (products) => {
+        this.products = products;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching favorites', err);
+        this.loading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 }

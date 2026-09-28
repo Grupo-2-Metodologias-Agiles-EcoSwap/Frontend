@@ -18,7 +18,7 @@
         {{ error }}
       </div>
 
-      <!-- Microsoft Login -->
+      <!-- Microsoft Login (Disabled due to UPC tenant admin approval policy)
       <button type="button" (click)="loginWithMicrosoft()" [disabled]="isMicrosoftLoading" class="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-bold py-3 px-4 rounded-xl shadow-sm transition-all disabled:opacity-50 mb-6 group">
         <svg *ngIf="!isMicrosoftLoading" class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 21 21">
           <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -36,6 +36,7 @@
         </div>
         <div class="relative bg-white px-4 text-sm font-medium text-gray-400">O ingresa con tu correo</div>
       </div>
+      -->
 
       <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <div>
@@ -46,8 +47,9 @@
         </div>
 
         <div>
-          <button type="submit" [disabled]="!loginForm.valid" class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
-            Iniciar Sesión
+          <button type="submit" [disabled]="!loginForm.valid || isLoading" class="group relative w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50">
+            <span *ngIf="isLoading" class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+            {{ isLoading ? 'Iniciando Sesión...' : 'Iniciar Sesión' }}
           </button>
         </div>
         

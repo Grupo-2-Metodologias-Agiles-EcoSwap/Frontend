@@ -18,6 +18,9 @@ export class AddProduct implements OnInit {
   success: boolean = false;
   imagesBase64: string[] = [];
   isCompressing: boolean = false;
+  isCheckingModeration: boolean = false;
+  moderationError: string | null = null;
+  moderationCategory: string | null = null;
   previewImage: string | null = null;
   draggedIndex: number | null = null;
   categories: Category[] = [];
@@ -56,10 +59,10 @@ export class AddProduct implements OnInit {
     if (files && files.length > 0) {
       this.isCompressing = true;
       this.cdr.detectChanges(); // Force UI update to show spinner
-      
+
       // Allow UI to render the spinner before blocking the thread
       await new Promise(resolve => setTimeout(resolve, 50));
-      
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (file.type.match(/image\/*/)) {
@@ -129,7 +132,7 @@ export class AddProduct implements OnInit {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            
+
             // Use WebP with 0.7 quality to keep payload under 100kb limit
             const dataUrl = canvas.toDataURL('image/webp', 0.7);
             resolve(dataUrl);
@@ -145,25 +148,84 @@ export class AddProduct implements OnInit {
     if (this.productForm.valid) {
       const formValue = this.productForm.value;
       const user = this.authService.currentUser;
-      
+      const selectedCategory = this.categories.find(c => c.id === formValue.categoryId)?.name || '';
+
+      this.isCheckingModeration = true;
+      this.moderationError = null;
+      this.moderationCategory = null;
+      this.cdr.detectChanges();
+
       const newProduct = {
         title: formValue.title,
         description: formValue.description,
         price: Number(formValue.price),
         status: formValue.status,
-        categoryId: Number(formValue.categoryId),
+        categoryId: formValue.categoryId,
         userId: user ? user.id : 1,
         available: true,
         type: formValue.type,
         createdAt: new Date().toISOString().split('T')[0],
-        images: this.imagesBase64
+        images: this.imagesBase64,
+        subject: formValue.subcategoryId
       };
 
-      this.apiService.addProduct(newProduct).subscribe(() => {
-        this.success = true;
-        setTimeout(() => {
-          this.router.navigate(['/my-products']);
-        }, 1500);
+      // Validación preventiva con IA
+      this.apiService.moderateProduct({
+        title: formValue.title,
+        description: formValue.description,
+        category: selectedCategory,
+        imagesBase64: this.imagesBase64
+      }).subscribe({
+        next: (modResult) => {
+          if (!modResult.allowed) {
+            this.isCheckingModeration = false;
+            this.moderationError = modResult.reason;
+            this.moderationCategory = modResult.category;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          console.log('Moderación IA aprobada. Enviando producto...');
+          this.apiService.addProduct(newProduct).subscribe({
+            next: () => {
+              this.isCheckingModeration = false;
+              this.success = true;
+              this.cdr.detectChanges();
+              setTimeout(() => {
+                this.router.navigate(['/my-products']);
+              }, 1500);
+            },
+            error: (err) => {
+              this.isCheckingModeration = false;
+              if (err.status === 422 && err.error?.isModerated) {
+                this.moderationError = err.error.error;
+                this.moderationCategory = err.error.category;
+              } else {
+                alert(err.error?.error || 'Error al guardar el producto');
+              }
+              this.cdr.detectChanges();
+            }
+          });
+        },
+        error: (err) => {
+          // Si el servicio de moderación tiene algún fallo, permitimos el flujo normal
+          console.warn('Fallback: servicio de moderación no disponible, procediendo:', err);
+          this.apiService.addProduct(newProduct).subscribe({
+            next: () => {
+              this.isCheckingModeration = false;
+              this.success = true;
+              this.cdr.detectChanges();
+              setTimeout(() => {
+                this.router.navigate(['/my-products']);
+              }, 1500);
+            },
+            error: (saveErr) => {
+              this.isCheckingModeration = false;
+              alert(saveErr.error?.error || 'Error al guardar el producto');
+              this.cdr.detectChanges();
+            }
+          });
+        }
       });
     }
   }

@@ -9,24 +9,29 @@
     </div>
 
     <!-- Success Message -->
-    <div *ngIf="saveSuccess" class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2 shadow-sm">
+    <div *ngIf="saveSuccess"
+      class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2 shadow-sm">
       <span class="material-icons">check_circle</span>
       <span class="font-bold">¡Producto actualizado exitosamente!</span>
     </div>
 
     <!-- Delete Confirm Modal -->
-    <div *ngIf="deleteConfirm" class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div *ngIf="deleteConfirm"
+      class="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
       <div class="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl">
         <div class="text-center mb-6">
           <span class="material-icons text-red-500 text-5xl">delete_forever</span>
           <h2 class="text-xl font-extrabold text-gray-900 mt-3">¿Eliminar producto?</h2>
-          <p class="text-sm text-gray-500 mt-2">Esta acción no se puede deshacer. El producto será eliminado permanentemente.</p>
+          <p class="text-sm text-gray-500 mt-2">Esta acción no se puede deshacer. El producto será eliminado
+            permanentemente.</p>
         </div>
         <div class="flex gap-3">
-          <button (click)="cancelDelete()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition">
+          <button (click)="cancelDelete()"
+            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition">
             Cancelar
           </button>
-          <button (click)="deleteProduct()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition">
+          <button (click)="deleteProduct()"
+            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl transition">
             Eliminar
           </button>
         </div>
@@ -42,14 +47,14 @@
           <div class="w-full aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4 border border-gray-200">
             <img [src]="selectedImage" [alt]="product.title" class="w-full h-full object-cover">
           </div>
+
           <!-- Thumbnails -->
-          <div class="flex gap-2 w-full overflow-x-auto pb-1" *ngIf="product.images && product.images.length > 1">
-            <button *ngFor="let img of product.images"
-                    (click)="selectedImage = img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img"
-                    class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 focus:outline-none"
-                    [class.border-blue-500]="selectedImage === (img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img)"
-                    [class.border-transparent]="selectedImage !== (img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img)">
-              <img [src]="img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img" class="w-full h-full object-cover">
+          <div *ngIf="product.images && product.images.length > 1" class="flex gap-4 w-full overflow-x-auto pb-2">
+            <button *ngFor="let img of product.images" (click)="selectedImage = formatImage(img)"
+              class="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 focus:outline-none"
+              [class.border-blue-500]="selectedImage === formatImage(img)"
+              [class.border-transparent]="selectedImage !== formatImage(img)">
+              <img [src]="formatImage(img)" class="w-full h-full object-cover">
             </button>
           </div>
         </div>
@@ -58,21 +63,25 @@
         <div class="md:w-1/2 p-8 flex flex-col justify-between bg-green-50/30">
           <div>
             <div class="flex items-center justify-between mb-4">
-              <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                TU PRODUCTO
-              </span>
-              <span class="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"
-                    [class.bg-green-100]="isAvailable"
-                    [class.text-green-700]="isAvailable"
-                    [class.bg-gray-100]="!isAvailable"
-                    [class.text-gray-500]="!isAvailable">
-                {{ isAvailable ? 'Activo' : 'Pausado' }}
+              <div class="flex gap-2">
+                <span
+                  class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  TU PRODUCTO
+                </span>
+                <span *ngIf="!product.available"
+                  class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  PAUSADO
+                </span>
+              </div>
+              <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                {{ product.status === 'new' ? 'NUEVO' : 'USADO' }}
               </span>
             </div>
 
             <h1 class="text-3xl font-extrabold text-gray-900 mb-2">{{ product.title }}</h1>
             <p class="text-sm text-gray-500 mb-2">Publicado el {{ product.createdAt | date:'longDate' }}</p>
-            <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-6">
+            <span
+              class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-6">
               {{ product.status === 'new' ? 'NUEVO' : (product.status === 'any' ? 'NUEVO / USADO' : 'USADO') }}
             </span>
 
@@ -85,20 +94,20 @@
 
           <!-- Actions -->
           <div class="space-y-3">
-            <button (click)="enterEditMode()"
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
+            <button (click)="openEditModal()"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
               <span class="material-icons text-sm">edit</span>
               Editar Producto
             </button>
 
             <button (click)="toggleAvailability()"
-                    class="w-full bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
-              <span class="material-icons text-sm">{{ isAvailable ? 'visibility_off' : 'visibility' }}</span>
-              {{ isAvailable ? 'Pausar Publicación' : 'Reactivar Publicación' }}
+              class="w-full bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
+              <span class="material-icons text-sm">{{ product.available ? 'visibility_off' : 'visibility' }}</span>
+              {{ product.available ? 'Pausar Publicación' : 'Reactivar Publicación' }}
             </button>
 
-            <button (click)="confirmDelete()"
-                    class="w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
+            <button (click)="deleteProduct()"
+              class="w-full bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 font-bold py-3 px-4 rounded-xl shadow-sm transition-transform hover:scale-[1.02] flex justify-center items-center gap-2">
               <span class="material-icons text-sm">delete_outline</span>
               Eliminar Producto
             </button>
@@ -128,13 +137,13 @@
             <!-- Tipo -->
             <div class="bg-gray-50 p-1.5 rounded-2xl flex gap-1 border border-gray-200">
               <button type="button" (click)="editForm.patchValue({type: 'sale'})"
-                      class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                      [ngClass]="editForm.value.type === 'sale' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'">
+                class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                [ngClass]="editForm.value.type === 'sale' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'">
                 <span class="material-icons text-sm">storefront</span> Vender
               </button>
               <button type="button" (click)="editForm.patchValue({type: 'wanted'})"
-                      class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
-                      [ngClass]="editForm.value.type === 'wanted' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'">
+                class="flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                [ngClass]="editForm.value.type === 'wanted' ? 'bg-white text-purple-600 shadow-sm' : 'text-gray-500'">
                 <span class="material-icons text-sm">search</span> Buscar
               </button>
             </div>
@@ -143,14 +152,14 @@
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">Nombre del producto</label>
               <input type="text" formControlName="title"
-                     class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
+                class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
             </div>
 
             <!-- Descripción -->
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
               <textarea formControlName="description" rows="4"
-                        class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 resize-none"></textarea>
+                class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 resize-none"></textarea>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
@@ -160,14 +169,14 @@
                 <div class="relative">
                   <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
                   <input type="number" formControlName="price"
-                         class="w-full bg-gray-50 rounded-xl pl-9 pr-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
+                    class="w-full bg-gray-50 rounded-xl pl-9 pr-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
                 </div>
               </div>
               <!-- Estado -->
               <div>
                 <label class="block text-sm font-bold text-gray-700 mb-1">Estado</label>
                 <select formControlName="status"
-                        class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 appearance-none">
+                  class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 appearance-none">
                   <option value="new">Nuevo</option>
                   <option value="used">Usado</option>
                   <option *ngIf="editForm.value.type === 'wanted'" value="any">Indiferente</option>
@@ -179,7 +188,7 @@
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
               <select formControlName="categoryId"
-                      class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 appearance-none">
+                class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 appearance-none">
                 <option *ngFor="let cat of categories" [value]="cat.id.toString()">{{ cat.name }}</option>
               </select>
             </div>
@@ -192,12 +201,14 @@
             </h3>
 
             <!-- Upload zone -->
-            <label class="w-full aspect-[2/1] mb-4 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition bg-white"
-                   [ngClass]="{'opacity-60 cursor-wait': isCompressing}">
+            <label
+              class="w-full aspect-[2/1] mb-4 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-blue-50 hover:border-blue-400 transition bg-white"
+              [ngClass]="{'opacity-60 cursor-wait': isCompressing}">
               <ng-container *ngIf="!isCompressing">
                 <span class="material-icons text-3xl mb-1">cloud_upload</span>
                 <span class="text-sm font-bold">Agregar fotos</span>
-                <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" class="hidden" [disabled]="isCompressing">
+                <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" class="hidden"
+                  [disabled]="isCompressing">
               </ng-container>
               <ng-container *ngIf="isCompressing">
                 <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
@@ -206,18 +217,22 @@
             </label>
 
             <!-- Images grid -->
-            <div class="grid grid-cols-3 gap-3" *ngIf="imagesBase64.length > 0"
-                 cdkDropList cdkDropListOrientation="mixed" (cdkDropListDropped)="drop($event)">
+            <div class="grid grid-cols-3 gap-3" *ngIf="imagesBase64.length > 0" cdkDropList
+              cdkDropListOrientation="mixed" (cdkDropListDropped)="drop($event)">
               <div *ngFor="let img of imagesBase64; let i = index" cdkDrag
-                   class="relative group aspect-square rounded-xl overflow-hidden border bg-white shadow-sm cursor-grab"
-                   [ngClass]="i === 0 ? 'border-green-400 ring-2 ring-green-400' : 'border-gray-200'"
-                   (click)="openPreview(img)">
-                <img [src]="img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img" class="w-full h-full object-cover pointer-events-none">
-                <div *ngIf="i === 0" class="absolute top-1 left-1 bg-green-500 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded z-10 pointer-events-none">
+                class="relative group aspect-square rounded-xl overflow-hidden border bg-white shadow-sm cursor-grab"
+                [ngClass]="i === 0 ? 'border-green-400 ring-2 ring-green-400' : 'border-gray-200'"
+                (click)="openPreview(img)">
+                <img [src]="img.startsWith('http') || img.startsWith('data:') ? img : 'assets/' + img"
+                  class="w-full h-full object-cover pointer-events-none">
+                <div *ngIf="i === 0"
+                  class="absolute top-1 left-1 bg-green-500 text-white text-[9px] font-extrabold uppercase px-2 py-0.5 rounded z-10 pointer-events-none">
                   Principal
                 </div>
-                <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                  <button type="button" (click)="removeImage(i, $event)" class="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg">
+                <div
+                  class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <button type="button" (click)="removeImage(i, $event)"
+                    class="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg">
                     <span class="material-icons text-sm">delete</span>
                   </button>
                 </div>
@@ -231,11 +246,11 @@
         <!-- Footer -->
         <div class="bg-gray-50 border-t border-gray-100 p-6 flex justify-end gap-3">
           <button type="button" (click)="cancelEdit()"
-                  class="bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-3 px-6 rounded-xl transition">
+            class="bg-white border-2 border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-3 px-6 rounded-xl transition">
             Cancelar
           </button>
           <button type="submit" [disabled]="!editForm.valid || isCompressing"
-                  class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-2">
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition disabled:opacity-50 flex items-center gap-2">
             <span class="material-icons text-sm">save</span>
             Guardar Cambios
           </button>
@@ -251,10 +266,151 @@
   <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500"></div>
 </div>
 
-<!-- Lightbox -->
-<div *ngIf="previewImage" class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" (click)="closePreview()">
-  <button (click)="closePreview()" class="absolute top-6 right-6 text-white hover:text-red-500 bg-white/10 rounded-full p-2 flex">
-    <span class="material-icons text-3xl">close</span>
-  </button>
-  <img [src]="previewImage" class="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl" (click)="$event.stopPropagation()">
+<!-- Edit Modal -->
+<div *ngIf="showEditModal"
+  class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in p-4 overflow-y-auto">
+  <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl p-6 space-y-4 my-8">
+    <div class="flex justify-between items-center border-b pb-3">
+      <h3 class="text-xl font-bold text-gray-900">Editar Publicación</h3>
+      <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+
+    <div class="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+      <!-- Tipo de publicación -->
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1">Tipo de Publicación</label>
+        <div class="bg-gray-50 p-1.5 rounded-2xl flex gap-1 border border-gray-200">
+          <button type="button" (click)="editType = 'sale'"
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+            [ngClass]="editType === 'sale' ? 'bg-white text-blue-600 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+            <span class="material-icons text-sm">storefront</span> Venta
+          </button>
+          <button type="button" (click)="editType = 'wanted'"
+            class="flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+            [ngClass]="editType === 'wanted' ? 'bg-white text-purple-600 shadow-sm ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'">
+            <span class="material-icons text-sm">search</span> Búsqueda
+          </button>
+        </div>
+      </div>
+
+      <!-- Título -->
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1">Título</label>
+        <input type="text" [(ngModel)]="editTitle"
+          class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+          placeholder="Título del producto">
+      </div>
+
+      <!-- Descripción -->
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1">Descripción</label>
+        <textarea rows="3" [(ngModel)]="editDescription"
+          class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-none"
+          placeholder="Escribe detalles del producto..."></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Precio -->
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">{{ editType === 'sale' ? 'Precio (S/)' :
+            'Presupuesto Máx (S/)' }}</label>
+          <input type="number" [(ngModel)]="editPrice"
+            class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            placeholder="0.00">
+        </div>
+
+        <!-- Estado -->
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">{{ editType === 'sale' ? 'Estado' : 'Preferencia de
+            estado' }}</label>
+          <select [(ngModel)]="editStatus"
+            class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            <option value="new">Nuevo</option>
+            <option value="used">Usado</option>
+            <option *ngIf="editType === 'wanted'" value="any">Indiferente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Categoría -->
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Categoría</label>
+          <select [(ngModel)]="editCategoryId"
+            class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+            <option value="" disabled>Selecciona</option>
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </div>
+
+        <!-- Curso/Subtipo -->
+        <div>
+          <label class="block text-xs font-bold text-gray-600 mb-1">Curso / Subtipo</label>
+          <input type="text" [(ngModel)]="editSubject"
+            class="w-full text-sm border border-gray-200 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            placeholder="Opcional">
+        </div>
+      </div>
+
+      <!-- Edición de Imágenes -->
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1">
+          Imágenes {{ editType === 'wanted' ? '(Opcional)' : '' }}
+        </label>
+
+        <!-- Dropzone / Selector -->
+        <label
+          class="w-full aspect-[4/1] mb-3 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-blue-50 hover:border-blue-400 hover:text-blue-500 transition-all bg-white"
+          [ngClass]="{'opacity-60 cursor-wait': isCompressing}">
+          <ng-container *ngIf="!isCompressing">
+            <span class="material-icons text-xl mb-0.5">cloud_upload</span>
+            <span class="text-xs font-bold">Haz clic para subir fotos</span>
+            <input type="file" accept="image/*" multiple (change)="onFileSelected($event)" class="hidden"
+              [disabled]="isCompressing">
+          </ng-container>
+          <ng-container *ngIf="isCompressing">
+            <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mb-1"></div>
+            <span class="text-[10px] font-bold">Procesando...</span>
+          </ng-container>
+        </label>
+
+        <!-- Galería de vistas previas -->
+        <div class="grid grid-cols-4 gap-2" *ngIf="editImages.length > 0">
+          <div *ngFor="let img of editImages; let i = index"
+            class="relative group aspect-square rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+            <img [src]="formatImage(img)" class="w-full h-full object-cover">
+            <!-- Delete Overlay -->
+            <div
+              class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <button type="button" (click)="removeImage(i, $event)"
+                class="bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 flex shadow-md cursor-pointer transition-colors">
+                <span class="material-icons text-xs">delete</span>
+              </button>
+            </div>
+            <!-- Principal Badge -->
+            <div *ngIf="i === 0"
+              class="absolute top-1 left-1 bg-green-500 text-white text-[8px] font-extrabold px-1 rounded shadow-sm">
+              Principal
+            </div>
+          </div>
+        </div>
+        <div *ngIf="editImages.length === 0" class="text-center text-xs text-gray-400 mt-2 font-medium">
+          No hay fotos cargadas.
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 pt-3 border-t">
+      <button (click)="closeEditModal()"
+        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-sm transition-colors">
+        Cancelar
+      </button>
+      <button (click)="saveProduct()" [disabled]="isCompressing || (editType === 'sale' && editImages.length === 0)"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl text-sm shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Guardar Cambios
+      </button>
+    </div>
+  </div>
 </div>

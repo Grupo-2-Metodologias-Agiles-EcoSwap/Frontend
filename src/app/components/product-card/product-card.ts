@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../models';
 import { RouterLink } from '@angular/router';
@@ -12,17 +12,60 @@ import { ApiService } from '../../services/api';
   templateUrl: './product-card.html',
 })
 export class ProductCard implements OnInit {
-  @Input() product!: Product;
+  private _product!: Product;
+
+  @Input()
+  set product(val: Product) {
+    this._product = val;
+    this.updateProductDetails();
+  }
+  get product(): Product {
+    return this._product;
+  }
+
   isMyProduct = false;
   isFavorite = false;
 
-  constructor(private authService: AuthService, private apiService: ApiService) {}
+  constructor(
+    private authService: AuthService,
+    private apiService: ApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ownerReputation = 5;
+  ownerReviewCount = 0;
 
   ngOnInit() {
+    this.updateProductDetails();
+  }
+
+  private updateProductDetails() {
     const user = this.authService.currentUser;
-    if (user && this.product) {
-      this.isMyProduct = Number(this.product.userId) === Number(user.id);
-      this.isFavorite = (user.favorites || []).map(String).includes(String(this.product.id));
+    if (user && this._product) {
+      this.isMyProduct = String(this._product.userId) === String(user.id);
+      this.isFavorite = (user.favorites || []).map(String).includes(String(this._product.id));
+    }
+
+    if (this._product && this._product.userId) {
+      this.apiService.getUserById(this._product.userId).subscribe({
+        next: (owner) => {
+          if (owner) {
+            this.ownerReputation = owner.reputation !== undefined ? owner.reputation : 5;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => console.error('[ProductCard] Error fetching owner:', err)
+      });
+
+      this.apiService.getReviews(this._product.userId).subscribe({
+        next: (reviews) => {
+          if (reviews) {
+            this.ownerReviewCount = reviews.length;
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => console.error('[ProductCard] Error fetching reviews:', err)
+      });
     }
   }
 

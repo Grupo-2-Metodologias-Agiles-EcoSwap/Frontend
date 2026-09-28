@@ -21,7 +21,7 @@ export class Profile implements OnInit {
 
   isEditingInfo: boolean = false;
   isSavingInfo: boolean = false;
-  editData = { career: '', cycle: 1 };
+  editData = { name: '', career: '', cycle: 1 };
   availableCycles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   isVerifying: boolean = false;
@@ -45,6 +45,7 @@ export class Profile implements OnInit {
   startEditingInfo() {
     if (this.user) {
       this.editData = {
+        name: this.user.name || '',
         career: this.user.career || '',
         cycle: this.user.cycle || 1
       };
@@ -79,10 +80,11 @@ export class Profile implements OnInit {
   }
 
   saveInfo() {
-    if (!this.user || !this.editData.career.trim()) return;
+    if (!this.user || !this.editData.name.trim() || !this.editData.career.trim()) return;
     
     this.isSavingInfo = true;
     this.apiService.updateUser(this.user.id, {
+      name: this.editData.name.trim(),
       career: this.editData.career.trim(),
       cycle: Number(this.editData.cycle)
     }).subscribe({

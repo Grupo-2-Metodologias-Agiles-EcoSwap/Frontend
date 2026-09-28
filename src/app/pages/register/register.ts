@@ -4,6 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth';
 import { HttpClient } from '@angular/common/http';
+import { SupabaseService } from '../../services/supabase.service';
+import { from } from 'rxjs';
 
 @Component({
   selector: 'app-register',
@@ -17,17 +19,18 @@ export class Register {
   avatarBase64: string = '';
   isCompressing: boolean = false;
   isMicrosoftLoading: boolean = false;
+  isLoading: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
     private http: HttpClient,
+    private supabaseService: SupabaseService,
     private cdr: ChangeDetectorRef
   ) {
     this.registerForm = this.fb.group({
       name: ['', Validators.required],
-      phone: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       confirmPassword: ['', Validators.required]
@@ -44,9 +47,9 @@ export class Register {
       console.log('File selected:', event.target.files[0].name);
       this.isCompressing = true;
       this.cdr?.detectChanges();
-      
+
       await new Promise(resolve => setTimeout(resolve, 50));
-      
+
       try {
         const file = event.target.files[0];
         console.log('Starting compression...');
@@ -102,7 +105,7 @@ export class Register {
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
-            
+
             // Use WebP for better compression, quality 0.7
             const dataUrl = canvas.toDataURL('image/webp', 0.7);
             resolve(dataUrl);
@@ -116,27 +119,47 @@ export class Register {
 
   onSubmit() {
     if (this.registerForm.valid && !this.isCompressing) {
-      // Mock registration
-      const newUser = {
-        name: this.registerForm.value.name,
-        email: this.registerForm.value.email,
-        password: this.registerForm.value.password,
-        avatar: this.avatarBase64,
-        universityId: 1,
-        career: 'General',
-        cycle: 1,
-        reputation: 0,
-        verified: false,
-        active: true,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      this.http.post('http://localhost:3001/users', newUser).subscribe({
-        next: () => {
-          this.router.navigate(['/login']);
+      const email = this.registerForm.value.email;
+      const password = this.registerForm.value.password;
+      const name = this.registerForm.value.name;
+
+      if (!email.endsWith('@upc.edu.pe')) {
+        this.error = 'Solo se permiten correos de la comunidad UPC (@upc.edu.pe)';
+        return;
+      }
+
+      this.isLoading = true;
+      this.error = '';
+
+      if (this.avatarBase64) {
+        localStorage.setItem('pendingAvatar', this.avatarBase64);
+      } else {
+        localStorage.removeItem('pendingAvatar');
+      }
+
+      from(this.supabaseService.client.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            career: 'General',
+            cycle: 1
+          }
+        }
+      })).subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          if (res.error) {
+            this.error = 'Error al crear la cuenta: ' + res.error.message;
+          } else {
+            alert('¡Cuenta creada con éxito!');
+            this.router.navigate(['/login']);
+          }
         },
-        error: () => {
-          this.error = 'Error al crear la cuenta.';
+        error: (err) => {
+          this.isLoading = false;
+          this.error = 'Error de conexión con el servidor de autenticación.';
         }
       });
     }
@@ -145,35 +168,23 @@ export class Register {
   registerWithMicrosoft() {
     this.isMicrosoftLoading = true;
     this.error = '';
-    
-    setTimeout(() => {
-      const mockRandom = Math.floor(Math.random() * 10000);
-      const newUser = {
-        name: `Estudiante Verificado ${mockRandom}`,
-        email: `u202${mockRandom}@upc.edu.pe`,
-        password: 'password123',
-        avatar: '',
-        universityId: 1,
-        career: 'No especificada',
-        cycle: 1,
-        reputation: 0,
-        verified: true, // Auto-verified by Microsoft SSO!
-        active: true,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      
-      this.http.post('http://localhost:3001/users', newUser).subscribe({
-        next: () => {
+
+    from(this.supabaseService.client.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        redirectTo: window.location.origin + '/login'
+      }
+    })).subscribe({
+      next: (res) => {
+        if (res.error) {
+          this.error = res.error.message;
           this.isMicrosoftLoading = false;
-          this.authService.login(newUser.email).subscribe(() => {
-            this.router.navigate(['/home']);
-          });
-        },
-        error: () => {
-          this.isMicrosoftLoading = false;
-          this.error = 'Error al conectar con Microsoft.';
         }
-      });
-    }, 1500);
+      },
+      error: (err) => {
+        this.error = 'Error de conexión con Microsoft.';
+        this.isMicrosoftLoading = false;
+      }
+    });
   }
 }

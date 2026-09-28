@@ -44,7 +44,8 @@ export interface Product {
   type?: 'sale' | 'wanted';
   createdAt: string;
   images: string[];
-  model3d?: string;
+  model3d?: string | Model3D;
+  subject?: string;
 }
 
 export interface Chat {
@@ -60,11 +61,14 @@ export interface Message {
   chatId: number | string;
   senderId: number | string;
   text: string;
-  type?: 'text' | 'meetup';
+  type?: 'text' | 'meetup' | 'system';
   meetup?: {
+    locationId?: string | null;
+    locationName?: string;
     location: string;
     date: string;
     time: string;
+    notes?: string;
     status: 'pending' | 'accepted' | 'declined';
   };
   createdAt: string;

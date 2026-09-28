@@ -23,6 +23,7 @@
     "@angular/router": "^22.0.0",
     "@ngx-translate/core": "^17.0.0",
     "@ngx-translate/http-loader": "^17.0.0",
+    "@supabase/supabase-js": "^2.108.1",
     "rxjs": "~7.8.0",
     "three": "^0.184.0",
     "tslib": "^2.3.0"

@@ -13,6 +13,7 @@ import { ProductCard } from '../../components/product-card/product-card';
 })
 export class MyProducts implements OnInit {
   products: Product[] = [];
+  activeTab: 'sale' | 'wanted' = 'sale';
 
   constructor(
     private apiService: ApiService,
@@ -32,6 +33,19 @@ export class MyProducts implements OnInit {
         this.products = [];
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  setActiveTab(tab: 'sale' | 'wanted') {
+    this.activeTab = tab;
+  }
+
+  get filteredProducts(): Product[] {
+    return this.products.filter(p => {
+      if (this.activeTab === 'wanted') {
+        return p.type === 'wanted';
+      }
+      return p.type !== 'wanted';
     });
   }
 }

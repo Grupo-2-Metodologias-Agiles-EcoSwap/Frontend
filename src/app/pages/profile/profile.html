@@ -78,6 +78,10 @@
 
               <!-- Edit Mode -->
               <div *ngIf="isEditingInfo" class="grid grid-cols-2 gap-y-4 gap-x-4">
+                <div class="col-span-2">
+                  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Nombre Completo</label>
+                  <input type="text" [(ngModel)]="editData.name" class="w-full bg-white rounded-lg px-3 py-2 text-sm text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Tu nombre completo">
+                </div>
                 <div class="col-span-2 sm:col-span-1">
                   <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 block">Carrera</label>
                   <input type="text" [(ngModel)]="editData.career" class="w-full bg-white rounded-lg px-3 py-2 text-sm text-gray-800 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="Ej. Arquitectura">
@@ -92,7 +96,7 @@
                   <button (click)="cancelEditingInfo()" class="text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors px-3 py-2 rounded-lg hover:bg-gray-200">
                     Cancelar
                   </button>
-                  <button (click)="saveInfo()" [disabled]="isSavingInfo || !editData.career.trim()" class="text-sm font-bold bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2">
+                  <button (click)="saveInfo()" [disabled]="isSavingInfo || !editData.name.trim() || !editData.career.trim()" class="text-sm font-bold bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2">
                     <span *ngIf="isSavingInfo" class="material-icons animate-spin text-[16px]">sync</span>
                     Guardar
                   </button>

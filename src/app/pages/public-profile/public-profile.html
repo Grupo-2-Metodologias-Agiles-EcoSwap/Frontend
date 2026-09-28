@@ -69,7 +69,7 @@
             <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
               <span class="material-icons text-yellow-500">star</span> Reseñas de Estudiantes
             </h2>
-            <button *ngIf="currentUser && currentUser.id !== user.id" (click)="showReviewForm = !showReviewForm" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+            <button *ngIf="currentUser && currentUser.id !== user.id && canReview" (click)="showReviewForm = !showReviewForm" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
               {{ showReviewForm ? 'Cancelar' : 'Dejar Reseña' }}
             </button>
           </div>

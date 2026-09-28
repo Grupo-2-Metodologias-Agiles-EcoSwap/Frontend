@@ -5,17 +5,39 @@
     <h1 class="text-3xl font-bold text-center text-white">Mis Productos</h1>
   </div>
 
+  <!-- Tab Switcher -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 flex justify-center">
+    <div class="flex bg-gray-100 p-1 rounded-xl shadow-inner border border-gray-200">
+      <button (click)="setActiveTab('sale')"
+        [ngClass]="activeTab === 'sale' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+        class="px-6 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-2">
+        <span class="material-icons text-sm">storefront</span>
+        Mis Ventas
+      </button>
+      <button (click)="setActiveTab('wanted')"
+        [ngClass]="activeTab === 'wanted' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+        class="px-6 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-2">
+        <span class="material-icons text-sm">search</span>
+        Mis Solicitudes
+      </button>
+    </div>
+  </div>
+
   <!-- Products Grid -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" *ngIf="products.length > 0">
-      <app-product-card *ngFor="let product of products" [product]="product"></app-product-card>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" *ngIf="filteredProducts.length > 0">
+      <app-product-card *ngFor="let product of filteredProducts" [product]="product"></app-product-card>
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="products.length === 0" class="text-center mt-16 pb-8 flex flex-col items-center justify-center">
-      <span class="material-icons text-6xl text-gray-300 mb-4">inventory_2</span>
-      <h3 class="text-xl font-medium text-gray-600">Aún no has publicado ningún producto</h3>
-      <p class="text-gray-500 mt-2">Sube tu primer artículo para empezar a vender.</p>
+    <div *ngIf="filteredProducts.length === 0" class="text-center mt-16 pb-8 flex flex-col items-center justify-center">
+      <span class="material-icons text-6xl text-gray-300 mb-4">{{ activeTab === 'wanted' ? 'person_search' : 'inventory_2' }}</span>
+      <h3 class="text-xl font-medium text-gray-600">
+        {{ activeTab === 'wanted' ? 'Aún no has publicado ninguna solicitud' : 'Aún no has publicado ningún producto en venta' }}
+      </h3>
+      <p class="text-gray-500 mt-2">
+        {{ activeTab === 'wanted' ? 'Si buscas algún libro o material académico, crea una solicitud.' : 'Sube tu primer artículo para empezar a vender.' }}
+      </p>
     </div>
   </div>
 </div>

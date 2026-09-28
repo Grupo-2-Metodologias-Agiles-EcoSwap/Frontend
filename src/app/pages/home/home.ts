@@ -29,21 +29,23 @@ export class Home implements OnInit {
   postCategoryId: string | number = '';
   postPrice: number | null = null;
   postStatus: string = 'any';
-  
+
   showDetails: boolean = false;
   isPublishing: boolean = false;
+  moderationError: string | null = null;
+  moderationCategory: string | null = null;
 
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
-      
-      const request$ = user 
+
+      const request$ = user
         ? this.apiService.getProductsExceptUserId(user.id)
         : this.apiService.getProducts();
 
@@ -105,6 +107,19 @@ export class Home implements OnInit {
 
   // --- Inline Publishing Logic ---
 
+  isFormInvalid(): boolean {
+    if (this.isPublishing) return true;
+    if (!this.postContent || !this.postContent.trim()) return true;
+    if (!this.postCategoryId) return true;
+
+    if (this.postType === 'sale') {
+      if (!this.postImageBase64) return true;
+      if (this.postPrice === null || this.postPrice === undefined || this.postPrice < 0) return true;
+    }
+
+    return false;
+  }
+
   toggleDetails() {
     this.showDetails = !this.showDetails;
   }
@@ -130,12 +145,16 @@ export class Home implements OnInit {
     if (!this.postContent.trim() && !this.postImageBase64) return;
 
     this.isPublishing = true;
+    this.moderationError = null;
+    this.moderationCategory = null;
+    this.cdr.detectChanges();
 
     // Default values if some fields are left empty
     const finalType = this.postType;
     const finalPrice = finalType === 'wanted' ? 0 : (this.postPrice || 0);
-    const finalCategory = this.postCategoryId || (this.categories.length > 0 ? this.categories[0].id : 1);
-    
+    const finalCategory = this.postCategoryId || (this.categories.length > 0 ? this.categories[0].id : undefined);
+    const selectedCategoryName = this.categories.find(c => c.id === finalCategory)?.name || '';
+
     // Create a meaningful title from content (first 50 chars)
     let finalTitle = this.postContent.trim().split('\n')[0].substring(0, 50);
     if (finalTitle.length === 50) finalTitle += '...';
@@ -143,7 +162,7 @@ export class Home implements OnInit {
 
     const newPost: Partial<Product> = {
       title: finalTitle,
-      description: this.postContent.trim(),
+      description: this.postContent.trim() || finalTitle,
       price: finalPrice,
       status: this.postStatus,
       categoryId: finalCategory,
@@ -154,27 +173,75 @@ export class Home implements OnInit {
       images: this.postImageBase64 ? [this.postImageBase64] : []
     };
 
-    this.apiService.addProduct(newPost).subscribe({
-      next: (createdPost) => {
-        // Reset form
-        this.postContent = '';
-        this.postImageBase64 = null;
-        this.postPrice = null;
-        this.showDetails = false;
-        this.isPublishing = false;
-        
-        // Add to feed locally
-        this.allProducts.unshift(createdPost);
-        
-        // Switch to the correct feed type to show the new post
-        this.setFeedType(finalType);
-        this.applyFilters();
+    // Moderación preventiva con Gemini IA
+    this.apiService.moderateProduct({
+      title: finalTitle,
+      description: this.postContent.trim(),
+      category: selectedCategoryName,
+      imagesBase64: this.postImageBase64 ? [this.postImageBase64] : []
+    }).subscribe({
+      next: (modResult) => {
+        if (!modResult.allowed) {
+          this.isPublishing = false;
+          this.moderationError = modResult.reason;
+          this.moderationCategory = modResult.category;
+          this.cdr.detectChanges();
+          return;
+        }
+
+        // Si es aprobado, procedemos a guardar
+        this.apiService.addProduct(newPost).subscribe({
+          next: (createdPost) => {
+            // Reset form
+            this.postContent = '';
+            this.postImageBase64 = null;
+            this.postPrice = null;
+            this.showDetails = false;
+            this.isPublishing = false;
+            this.moderationError = null;
+            this.moderationCategory = null;
+
+            alert('Publicación creada con éxito. Puedes verla en la sección de tus productos.');
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            console.error('Error publishing post', err);
+            this.isPublishing = false;
+            if (err.status === 422 && err.error?.isModerated) {
+              this.moderationError = err.error.error;
+              this.moderationCategory = err.error.category;
+            } else {
+              alert(err.error?.error || 'Error al publicar.');
+            }
+            this.cdr.detectChanges();
+          }
+        });
       },
-      error: (err) => {
-        console.error('Error publishing post', err);
-        this.isPublishing = false;
-        this.cdr.detectChanges();
+      error: () => {
+        // Fallback: si falla el servicio de IA, enviamos directamente
+        this.apiService.addProduct(newPost).subscribe({
+          next: () => {
+            this.postContent = '';
+            this.postImageBase64 = null;
+            this.postPrice = null;
+            this.showDetails = false;
+            this.isPublishing = false;
+            alert('Publicación creada con éxito.');
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            this.isPublishing = false;
+            if (err.status === 422 && err.error?.isModerated) {
+              this.moderationError = err.error.error;
+              this.moderationCategory = err.error.category;
+            } else {
+              alert(err.error?.error || 'Error al publicar.');
+            }
+            this.cdr.detectChanges();
+          }
+        });
       }
     });
   }
 }
+

@@ -23,6 +23,8 @@ export class PublicProfile implements OnInit {
   currentUser: User | null = null;
   
   showReviewForm = false;
+  canReview = false;
+  eligibleMeetingId: string | null = null;
   reviewForm: FormGroup;
   submittingReview = false;
   
@@ -78,6 +80,7 @@ export class PublicProfile implements OnInit {
         this.apiService.getReviews(userId).subscribe({
           next: (reviews) => {
             this.reviews = reviews;
+            this.checkEligibility(userId);
             
             // Fetch reviewers data to display their names/avatars
             const reviewerIds = [...new Set(reviews.map(r => r.reviewerId))];
@@ -88,7 +91,7 @@ export class PublicProfile implements OnInit {
               let loaded = 0;
               reviewerIds.forEach(rId => {
                 if (!this.reviewers[rId]) {
-                  this.apiService.getUserById(rId).subscribe({
+                   this.apiService.getUserById(rId).subscribe({
                     next: (reviewer) => {
                       this.reviewers[rId] = reviewer;
                       loaded++;
@@ -129,6 +132,36 @@ export class PublicProfile implements OnInit {
     });
   }
 
+  checkEligibility(userId: string) {
+    this.canReview = false;
+    this.eligibleMeetingId = null;
+
+    if (this.currentUser && String(this.currentUser.id) !== String(userId)) {
+      this.apiService.getMyMeetings().subscribe({
+        next: (meetings) => {
+          const eligibleMeeting = meetings.find(m => {
+            const chat = m.chats;
+            const isParticipant = chat && (String(chat.buyer_id) === String(userId) || String(chat.seller_id) === String(userId));
+            return m.status === 'confirmed' && isParticipant;
+          });
+
+          if (eligibleMeeting) {
+            // Verificar si el usuario actual ya calificó esta reunión en específico
+            const alreadyReviewed = this.reviews.some(r => String(r.reviewerId) === String(this.currentUser!.id));
+            if (!alreadyReviewed) {
+              this.canReview = true;
+              this.eligibleMeetingId = eligibleMeeting.id;
+            }
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('Error al comprobar elegibilidad de reseña:', err);
+        }
+      });
+    }
+  }
+
   getStars(rating: number): number[] {
     return Array(Math.round(rating) || 0).fill(0);
   }
@@ -146,30 +179,47 @@ export class PublicProfile implements OnInit {
     
     this.submittingReview = true;
     
-    const newReview: Partial<Review> = {
+    const newReview: Partial<Review> & { meetingId?: number | string } = {
       reviewerId: isNaN(Number(this.currentUser.id)) ? String(this.currentUser.id) : Number(this.currentUser.id),
       targetUserId: isNaN(Number(this.user.id)) ? String(this.user.id) : Number(this.user.id),
       rating: this.reviewForm.value.rating,
       comment: this.reviewForm.value.comment,
+      meetingId: this.eligibleMeetingId || undefined,
       createdAt: new Date().toISOString()
     };
 
-    this.apiService.addReview(newReview).subscribe(review => {
-      // Add to UI
-      this.reviews.unshift(review as Review);
-      if (this.currentUser) this.reviewers[this.currentUser.id] = this.currentUser;
-      
-      // Calculate new reputation
-      const totalScore = this.reviews.reduce((sum, r) => sum + r.rating, 0);
-      const newReputation = this.reviews.length > 0 ? Number((totalScore / this.reviews.length).toFixed(1)) : 0;
-      
-      // Update User in API
-      this.apiService.updateUser(this.user!.id, { reputation: newReputation }).subscribe(updatedUser => {
-        this.user = updatedUser;
+    this.apiService.addReview(newReview).subscribe({
+      next: (res: any) => {
+        // The backend returns the new average or we can map the response
+        const totalScore = this.reviews.reduce((sum, r) => sum + r.rating, 0) + (newReview.rating || 5);
+        const count = this.reviews.length + 1;
+        const newReputation = Number((totalScore / count).toFixed(1));
+
+        // Create a mapped review object to append to list
+        const reviewWithId: Review = {
+          id: res.review?.id || res.id || Math.random().toString(),
+          reviewerId: newReview.reviewerId!,
+          targetUserId: newReview.targetUserId!,
+          rating: newReview.rating!,
+          comment: newReview.comment!,
+          createdAt: newReview.createdAt!
+        };
+
+        this.reviews.unshift(reviewWithId);
+        if (this.currentUser) this.reviewers[this.currentUser.id] = this.currentUser;
+        if (this.user) this.user.reputation = res.newReputation !== undefined ? res.newReputation : newReputation;
+
         this.showReviewForm = false;
         this.submittingReview = false;
         this.reviewForm.reset({ rating: 5, comment: '' });
-      });
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al enviar la reseña:', err);
+        this.submittingReview = false;
+        alert('Ocurrió un error al enviar la reseña.');
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -187,19 +237,26 @@ export class PublicProfile implements OnInit {
     if (!this.reviewToDelete || !this.reviewToDelete.id || !this.user) return;
     
     this.deletingReview = true;
-    this.apiService.deleteReview(this.reviewToDelete.id).subscribe(() => {
-      this.reviews = this.reviews.filter(r => r.id !== this.reviewToDelete!.id);
-      
-      // Calculate new reputation
-      const totalScore = this.reviews.reduce((sum, r) => sum + r.rating, 0);
-      const newReputation = this.reviews.length > 0 ? Number((totalScore / this.reviews.length).toFixed(1)) : 0;
-      
-      this.apiService.updateUser(this.user!.id, { reputation: newReputation }).subscribe(updatedUser => {
-        this.user = updatedUser;
+    this.apiService.deleteReview(this.reviewToDelete.id).subscribe({
+      next: () => {
+        this.reviews = this.reviews.filter(r => r.id !== this.reviewToDelete!.id);
+        
+        // Calcular nueva reputación
+        const totalScore = this.reviews.reduce((sum, r) => sum + r.rating, 0);
+        const newReputation = this.reviews.length > 0 ? Number((totalScore / this.reviews.length).toFixed(1)) : 5.0;
+        
+        if (this.user) this.user.reputation = newReputation;
         this.deletingReview = false;
         this.cancelDelete();
         this.cdr.detectChanges();
-      });
+      },
+      error: (err) => {
+        console.error('Error al eliminar reseña:', err);
+        this.deletingReview = false;
+        this.cancelDelete();
+        alert('Ocurrió un error al eliminar la reseña.');
+        this.cdr.detectChanges();
+      }
     });
   }
 }

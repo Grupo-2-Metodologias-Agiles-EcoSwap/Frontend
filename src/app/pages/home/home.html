@@ -1,15 +1,17 @@
 <div class="bg-gray-100 min-h-screen pt-6 pb-12 font-sans">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      
+
       <!-- Left Sidebar -->
       <div class="hidden lg:block lg:col-span-1 space-y-6">
         <!-- User Profile Card -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden" *ngIf="currentUser">
           <div class="h-20 bg-gradient-to-r from-green-400 to-blue-500"></div>
           <div class="px-4 pb-4 relative">
-            <img *ngIf="currentUser.avatar" [src]="currentUser.avatar" class="w-16 h-16 rounded-full border-4 border-white absolute -top-8 bg-white object-cover">
-            <div *ngIf="!currentUser.avatar" class="w-16 h-16 rounded-full border-4 border-white absolute -top-8 bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-2xl">
+            <img *ngIf="currentUser.avatar" [src]="currentUser.avatar"
+              class="w-16 h-16 rounded-full border-4 border-white absolute -top-8 bg-white object-cover">
+            <div *ngIf="!currentUser.avatar"
+              class="w-16 h-16 rounded-full border-4 border-white absolute -top-8 bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-2xl">
               {{ currentUser.name.charAt(0) }}
             </div>
             <div class="pt-10">
@@ -23,25 +25,29 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
           <ul class="space-y-1">
             <li>
-              <a routerLink="/catalog" class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+              <a routerLink="/catalog"
+                class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
                 <span class="material-icons text-blue-500">storefront</span>
                 Explorar Catálogo
               </a>
             </li>
             <li>
-              <a routerLink="/my-products" class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+              <a routerLink="/my-products"
+                class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
                 <span class="material-icons text-green-500">inventory_2</span>
                 Mis Anuncios
               </a>
             </li>
             <li>
-              <a routerLink="/favorites" class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+              <a routerLink="/favorites"
+                class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
                 <span class="material-icons text-red-500">favorite</span>
                 Mis Favoritos
               </a>
             </li>
             <li>
-              <a routerLink="/chat" class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
+              <a routerLink="/chat"
+                class="flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium">
                 <span class="material-icons text-purple-500">forum</span>
                 Mensajes
               </a>
@@ -56,14 +62,15 @@
             Categorías
           </h3>
           <div class="space-y-2">
-            <a *ngFor="let cat of categories" (click)="toggleCategory(cat.id)" 
-               class="flex items-center justify-between group cursor-pointer p-2 rounded-lg transition-colors"
-               [ngClass]="{'bg-blue-50': selectedCategoryId == cat.id, 'hover:bg-gray-50': selectedCategoryId != cat.id}">
+            <a *ngFor="let cat of categories" (click)="toggleCategory(cat.id)"
+              class="flex items-center justify-between group cursor-pointer p-2 rounded-lg transition-colors"
+              [ngClass]="{'bg-blue-50': selectedCategoryId == cat.id, 'hover:bg-gray-50': selectedCategoryId != cat.id}">
               <div class="flex items-center gap-3">
-                <span class="material-icons transition-colors text-sm" 
-                      [ngClass]="{'text-blue-500': selectedCategoryId == cat.id, 'text-gray-400 group-hover:text-green-500': selectedCategoryId != cat.id}">folder</span>
-                <span class="text-sm font-medium transition-colors" 
-                      [ngClass]="{'text-blue-700 font-bold': selectedCategoryId == cat.id, 'text-gray-700 group-hover:text-gray-900': selectedCategoryId != cat.id}">{{ cat.name }}</span>
+                <span class="material-icons transition-colors text-sm"
+                  [ngClass]="{'text-blue-500': selectedCategoryId == cat.id, 'text-gray-400 group-hover:text-green-500': selectedCategoryId != cat.id}">folder</span>
+                <span class="text-sm font-medium transition-colors"
+                  [ngClass]="{'text-blue-700 font-bold': selectedCategoryId == cat.id, 'text-gray-700 group-hover:text-gray-900': selectedCategoryId != cat.id}">{{
+                  cat.name }}</span>
               </div>
             </a>
           </div>
@@ -74,46 +81,73 @@
       <div class="lg:col-span-2 space-y-6">
         <!-- Sell Action Block -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          
+          <!-- Banner de Alerta de Moderación IA Gemini en Feed de Inicio -->
+          <div *ngIf="moderationError" class="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 shadow-sm flex items-start gap-3 animate-fade-in">
+            <span class="material-icons text-amber-600 mt-0.5">security_update_warning</span>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-amber-900 text-sm">Publicación no permitida</h4>
+                <span *ngIf="moderationCategory" class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-200 text-amber-800">
+                  {{ moderationCategory }}
+                </span>
+              </div>
+              <p class="text-xs text-amber-800 mt-1 leading-relaxed">
+                {{ moderationError }}
+              </p>
+            </div>
+            <button type="button" (click)="moderationError = null" class="text-amber-500 hover:text-amber-700">
+              <span class="material-icons text-sm">close</span>
+            </button>
+          </div>
+
           <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0" *ngIf="currentUser && !currentUser.avatar">
+            <div
+              class="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0"
+              *ngIf="currentUser && !currentUser.avatar">
               {{ currentUser.name.charAt(0) }}
             </div>
-            <img *ngIf="currentUser && currentUser.avatar" [src]="currentUser.avatar" class="w-10 h-10 rounded-full object-cover shrink-0">
-            
+            <img *ngIf="currentUser && currentUser.avatar" [src]="currentUser.avatar"
+              class="w-10 h-10 rounded-full object-cover shrink-0">
+
             <div class="flex-1 flex flex-col gap-2">
-              <textarea 
-                [(ngModel)]="postContent" 
-                placeholder="¿Qué material académico quieres vender o buscas hoy?" 
+              <textarea [(ngModel)]="postContent" placeholder="¿Qué material académico quieres vender o buscas hoy?"
                 class="w-full bg-gray-50 hover:bg-gray-100 focus:bg-white text-gray-700 px-4 py-3 rounded-xl text-sm transition-colors resize-none outline-none border border-transparent focus:border-blue-300 focus:ring-2 focus:ring-blue-100 min-h-[60px]"
-                rows="2"
-              ></textarea>
-              
+                rows="2"></textarea>
+
               <!-- Image Preview -->
               <div *ngIf="postImageBase64" class="relative inline-block mt-2 self-start">
                 <img [src]="postImageBase64" class="h-32 object-cover rounded-lg border border-gray-200">
-                <button (click)="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors">
+                <button (click)="removeImage()"
+                  class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 transition-colors">
                   <span class="material-icons text-sm">close</span>
                 </button>
               </div>
             </div>
           </div>
-          
+
           <!-- Expanded Details Section -->
-          <div *ngIf="showDetails" class="mt-3 lg:ml-12 p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3 animate-fade-in">
+          <div *ngIf="showDetails"
+            class="mt-3 lg:ml-12 p-3 bg-gray-50 rounded-xl border border-gray-100 space-y-3 animate-fade-in">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- Post Type -->
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Tipo de Publicación</label>
                 <div class="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm">
-                  <button (click)="postType = 'sale'" [ngClass]="postType === 'sale' ? 'bg-blue-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'" class="flex-1 text-xs font-medium py-1.5 rounded-md transition-all">Venta</button>
-                  <button (click)="postType = 'wanted'" [ngClass]="postType === 'wanted' ? 'bg-purple-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'" class="flex-1 text-xs font-medium py-1.5 rounded-md transition-all">Solicitud</button>
+                  <button (click)="postType = 'sale'; showDetails = true"
+                    [ngClass]="postType === 'sale' ? 'bg-blue-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'"
+                    class="flex-1 text-xs font-medium py-1.5 rounded-md transition-all">Venta</button>
+                  <button (click)="postType = 'wanted'"
+                    [ngClass]="postType === 'wanted' ? 'bg-purple-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'"
+                    class="flex-1 text-xs font-medium py-1.5 rounded-md transition-all">Solicitud</button>
                 </div>
               </div>
-              
+
               <!-- Category -->
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Categoría</label>
-                <select [(ngModel)]="postCategoryId" class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                <select [(ngModel)]="postCategoryId"
+                  class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                   <option value="" disabled selected>Selecciona categoría...</option>
                   <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
                 </select>
@@ -122,13 +156,15 @@
               <!-- Price (only for sale) -->
               <div *ngIf="postType === 'sale'">
                 <label class="block text-xs font-bold text-gray-600 mb-1">Precio (S/)</label>
-                <input type="number" [(ngModel)]="postPrice" placeholder="0.00" class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                <input type="number" [(ngModel)]="postPrice" placeholder="0.00"
+                  class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
               </div>
 
               <!-- Status -->
               <div>
                 <label class="block text-xs font-bold text-gray-600 mb-1">Estado</label>
-                <select [(ngModel)]="postStatus" class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                <select [(ngModel)]="postStatus"
+                  class="w-full text-sm border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
                   <option value="any">Cualquiera / No especificado</option>
                   <option value="new">Nuevo</option>
                   <option value="used">Usado</option>
@@ -140,23 +176,23 @@
           <!-- Actions -->
           <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center lg:ml-12">
             <div class="flex gap-2">
-              <button (click)="fileInput.click()" class="flex items-center gap-1.5 text-gray-600 hover:text-green-600 font-medium text-sm transition-colors cursor-pointer px-3 py-1.5 rounded-lg hover:bg-green-50">
+              <button (click)="fileInput.click()"
+                class="flex items-center gap-1.5 text-gray-600 hover:text-green-600 font-medium text-sm transition-colors cursor-pointer px-3 py-1.5 rounded-lg hover:bg-green-50">
                 <span class="material-icons text-green-500 text-lg">add_photo_alternate</span>
                 <span class="hidden sm:inline">Foto</span>
               </button>
               <input type="file" hidden #fileInput accept="image/*" (change)="onFileSelected($event)">
-              
-              <button (click)="toggleDetails()" class="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors cursor-pointer px-3 py-1.5 rounded-lg hover:bg-blue-50" [ngClass]="{'bg-blue-50 text-blue-600': showDetails}">
+
+              <button (click)="toggleDetails()"
+                class="flex items-center gap-1.5 text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors cursor-pointer px-3 py-1.5 rounded-lg hover:bg-blue-50"
+                [ngClass]="{'bg-blue-50 text-blue-600': showDetails}">
                 <span class="material-icons text-blue-500 text-lg">tune</span>
                 <span class="hidden sm:inline">Detalles</span>
               </button>
             </div>
-            
-            <button 
-              (click)="publishPost()" 
-              [disabled]="isPublishing || (!postContent.trim() && !postImageBase64)"
-              class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2"
-            >
+
+            <button (click)="publishPost()" [disabled]="isFormInvalid()"
+              class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-2 rounded-full font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2">
               <span *ngIf="isPublishing" class="material-icons animate-spin text-sm">refresh</span>
               Publicar
             </button>
@@ -170,25 +206,28 @@
               <span class="material-icons text-blue-500">dynamic_feed</span>
               Publicaciones Recientes
             </h3>
-            
+
             <!-- Feed Type Tabs -->
             <div class="flex bg-gray-100 p-1 rounded-xl shadow-inner">
-              <button (click)="setFeedType('sale')" 
-                      [ngClass]="feedType === 'sale' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
-                      class="px-4 py-1.5 rounded-lg text-sm transition-all duration-200">
+              <button (click)="setFeedType('sale')"
+                [ngClass]="feedType === 'sale' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+                class="px-4 py-1.5 rounded-lg text-sm transition-all duration-200">
                 Ventas
               </button>
-              <button (click)="setFeedType('wanted')" 
-                      [ngClass]="feedType === 'wanted' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
-                      class="px-4 py-1.5 rounded-lg text-sm transition-all duration-200">
+              <button (click)="setFeedType('wanted')"
+                [ngClass]="feedType === 'wanted' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-700 font-medium'"
+                class="px-4 py-1.5 rounded-lg text-sm transition-all duration-200">
                 Solicitudes
               </button>
             </div>
           </div>
-          
-          <div *ngIf="products.length === 0" class="py-12 text-center bg-white rounded-xl border border-dashed border-gray-300">
-            <span class="material-icons text-gray-300 text-5xl mb-3">{{ feedType === 'wanted' ? 'person_search' : 'inventory_2' }}</span>
-            <p class="text-gray-500 font-medium">No hay {{ feedType === 'wanted' ? 'solicitudes' : 'productos nuevos' }} por el momento.</p>
+
+          <div *ngIf="products.length === 0"
+            class="py-12 text-center bg-white rounded-xl border border-dashed border-gray-300">
+            <span class="material-icons text-gray-300 text-5xl mb-3">{{ feedType === 'wanted' ? 'person_search' :
+              'inventory_2' }}</span>
+            <p class="text-gray-500 font-medium">No hay {{ feedType === 'wanted' ? 'solicitudes' : 'productos nuevos' }}
+              por el momento.</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -206,15 +245,21 @@
             Más Populares
           </h3>
           <div class="space-y-4">
-            <div *ngFor="let product of trendingProducts" routerLink="/product/{{product.id}}" class="flex items-start gap-3 group cursor-pointer">
-              <img [src]="product.images && product.images.length > 0 ? product.images[0] : 'assets/placeholder.png'" [alt]="product.title" class="w-16 h-16 rounded-lg object-cover border border-gray-100 group-hover:opacity-80 transition-opacity">
+            <div *ngFor="let product of trendingProducts" routerLink="/product/{{product.id}}"
+              class="flex items-start gap-3 group cursor-pointer">
+              <img [src]="product.images && product.images.length > 0 ? product.images[0] : 'assets/placeholder.png'"
+                [alt]="product.title"
+                class="w-16 h-16 rounded-lg object-cover border border-gray-100 group-hover:opacity-80 transition-opacity">
               <div>
-                <h4 class="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">{{ product.title }}</h4>
+                <h4
+                  class="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {{ product.title }}</h4>
                 <p class="text-green-600 font-bold text-sm mt-1">S/ {{ product.price | number:'1.2-2' }}</p>
               </div>
             </div>
           </div>
-          <a routerLink="/catalog" class="block w-full text-center text-sm text-blue-600 font-medium hover:text-blue-700 mt-4 pt-3 border-t border-gray-100 transition-colors">
+          <a routerLink="/catalog"
+            class="block w-full text-center text-sm text-blue-600 font-medium hover:text-blue-700 mt-4 pt-3 border-t border-gray-100 transition-colors">
             Ver todo el catálogo
           </a>
         </div>
