@@ -8,83 +8,18 @@
         <div class="md:w-1/2 p-6 flex flex-col items-center">
 
           <!-- 2D Main Image -->
-          <div *ngIf="!is3DMode && (product.type !== 'wanted' || (product.images && product.images.length > 0))"
+          <div *ngIf="product.type !== 'wanted' || (product.images && product.images.length > 0)"
             class="w-full aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4 border border-gray-200">
             <img [src]="selectedImage" [alt]="product.title" class="w-full h-full object-cover">
           </div>
 
           <!-- Wanted placeholder -->
-          <div *ngIf="!is3DMode && product.type === 'wanted' && (!product.images || product.images.length === 0)"
+          <div *ngIf="product.type === 'wanted' && (!product.images || product.images.length === 0)"
             class="w-full aspect-square rounded-xl overflow-hidden bg-purple-50 mb-4 border border-purple-100 flex flex-col items-center justify-center text-purple-300">
             <span class="material-icons text-7xl mb-4">person_search</span>
             <span class="font-bold text-lg text-purple-400">Buscando Material</span>
             <p class="text-sm text-purple-300 text-center px-8 mt-2">
               Este estudiante está buscando comprar este artículo, no venderlo.
-            </p>
-          </div>
-
-          <!-- 3D Viewer -->
-          <div *ngIf="is3DMode"
-            class="w-full aspect-square rounded-xl overflow-hidden mb-4 border border-blue-200 bg-slate-50 relative flex items-center justify-center">
-
-            <!-- Canvas (siempre presente cuando is3DMode, oculto hasta que esté ready) -->
-            <canvas #threeCanvas class="w-full h-full cursor-grab active:cursor-grabbing" [class.hidden]="!isReady"
-              style="display: block;">
-            </canvas>
-
-            <!-- Estado: Generando -->
-            <div *ngIf="isGenerating"
-              class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 gap-4 p-6">
-              <div class="relative w-20 h-20">
-                <svg class="animate-spin w-20 h-20 text-blue-500" viewBox="0 0 24 24" fill="none">
-                  <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" />
-                  <path class="opacity-80" stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                    d="M12 2a10 10 0 0 1 10 10" />
-                </svg>
-                <span class="absolute inset-0 flex items-center justify-center text-sm font-bold text-blue-600">
-                  {{ generationProgress }}%
-                </span>
-              </div>
-              <div class="text-center">
-                <p class="font-bold text-gray-700">Generando modelo 3D...</p>
-                <p class="text-sm text-gray-400 mt-1">La IA está procesando las imágenes</p>
-                <p class="text-xs text-gray-300 mt-1">Puede tardar 30-60 segundos</p>
-              </div>
-              <!-- Barra de progreso -->
-              <div class="w-full max-w-xs bg-gray-200 rounded-full h-2">
-                <div class="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                  [style.width.%]="generationProgress">
-                </div>
-              </div>
-            </div>
-
-            <!-- Estado: Cargando .glb -->
-            <div *ngIf="isLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 gap-3">
-              <div class="animate-bounce">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-500" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                </svg>
-              </div>
-              <p class="text-sm font-medium text-gray-600">Cargando modelo...</p>
-            </div>
-
-            <!-- Estado: Error -->
-            <div *ngIf="hasError"
-              class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 gap-3 p-6">
-              <span class="material-icons text-red-400 text-5xl">error_outline</span>
-              <p class="text-sm font-bold text-red-500 text-center">{{ errorMessage }}</p>
-              <button (click)="toggle3DView(); toggle3DView()"
-                class="mt-2 bg-red-50 border border-red-300 text-red-600 text-xs font-bold px-4 py-2 rounded-lg hover:bg-red-100">
-                Reintentar
-              </button>
-            </div>
-
-            <!-- Hint de controles (solo cuando está ready) -->
-            <p *ngIf="isReady"
-              class="absolute bottom-2 left-0 right-0 text-center text-xs text-gray-400 pointer-events-none select-none">
-              Arrastra para rotar · Scroll para zoom
             </p>
           </div>
 
