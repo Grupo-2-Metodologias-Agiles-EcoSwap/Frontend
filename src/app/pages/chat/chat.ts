@@ -30,7 +30,22 @@ export class ChatComponent implements OnInit, OnDestroy {
   locations: any[] = [];
   meetupDate = '';
   meetupTime = '';
-  
+
+  // Report modal state
+  showReportModal = false;
+  reportReason = '';
+  isSubmittingReport = false;
+  reportSuccess = false;
+  reportedTargetUser: User | null = null;
+  reportedMessageContent: string = '';
+
+  // Store flagged message ids and reasons (detected by AI or reported)
+  flaggedMessages = new Map<string | number, { reason: string; category: string | null }>();
+
+  // Track reports already sent to prevent duplicate reports
+  reportedMessageIds = new Set<string | number>();
+  reportedUsers = new Set<string | number>();
+
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
 
   // Maps to store extra info for UI
@@ -77,6 +92,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chatService.messages$.subscribe(messages => {
       this.messages = messages;
       
+      // Moderación preventiva / detección IA de mensajes recibidos:
+      // Analizamos los mensajes que NO son del usuario actual para alertar si contienen lenguaje inapropiado
+      this.checkIncomingMessagesForModeration(messages);
+
       // Sincronización en tiempo real del estado vendido del producto:
       // Al recibir cualquier actualización de mensajes (incluyendo el mensaje del sistema de venta),
       // refrescamos la información del producto para inhabilitar el chat inmediatamente.
@@ -306,6 +325,133 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       });
     }
+  }
+
+  private checkedMessageIds = new Set<string | number>();
+
+  checkIncomingMessagesForModeration(messages: Message[]) {
+    if (!this.currentUser) return;
+    const currentUserId = String(this.currentUser.id);
+
+    messages.forEach(msg => {
+      // Solo analizamos mensajes que no sean propios, sean de texto y no hayan sido analizados previamente
+      if (msg.id && String(msg.senderId) !== currentUserId && msg.type === 'text' && msg.text && !this.checkedMessageIds.has(msg.id)) {
+        this.checkedMessageIds.add(msg.id);
+
+        this.apiService.moderateMessage(msg.text).subscribe({
+          next: (res) => {
+            if (!res.allowed) {
+              this.flaggedMessages.set(msg.id!, {
+                reason: res.reason || 'Contenido posiblemente inapropiado',
+                category: res.category || 'Moderación IA'
+              });
+              this.cdr.detectChanges();
+            }
+          },
+          error: (err) => {
+            console.warn('Error al verificar mensaje con IA:', err);
+          }
+        });
+      }
+    });
+  }
+
+  isMessageFlagged(msg: Message): boolean {
+    return !!(msg.id && this.flaggedMessages.has(msg.id));
+  }
+
+  getFlaggedDetails(msg: Message): { reason: string; category: string | null } | undefined {
+    return msg.id ? this.flaggedMessages.get(msg.id) : undefined;
+  }
+
+  private reportedMessageIdBeingProcessed: string | number | null = null;
+
+  isMessageReported(msg: Message): boolean {
+    return !!(msg.id && this.reportedMessageIds.has(msg.id));
+  }
+
+  isOtherUserReported(): boolean {
+    if (!this.activeChat) return false;
+    const otherUser = this.getOtherUser(this.activeChat);
+    return !!(otherUser && this.reportedUsers.has(otherUser.id));
+  }
+
+  openReportModal(targetUser: User | null, msg?: Message) {
+    if (!targetUser) return;
+    if (msg && msg.id && this.reportedMessageIds.has(msg.id)) {
+      alert('Ya has enviado un reporte sobre este mensaje.');
+      return;
+    }
+    if (!msg && this.reportedUsers.has(targetUser.id)) {
+      alert('Ya has enviado un reporte sobre este usuario.');
+      return;
+    }
+
+    this.reportedTargetUser = targetUser;
+    this.reportedMessageContent = msg ? msg.text : '';
+    this.reportedMessageIdBeingProcessed = msg?.id || null;
+    
+    // Si viene de un mensaje flaggeado por la IA, prellenar la justificación
+    if (msg && msg.id && this.flaggedMessages.has(msg.id)) {
+      const flagged = this.flaggedMessages.get(msg.id)!;
+      this.reportReason = `Reporte por infracción detectada por IA (${flagged.category || 'Normas'}): "${msg.text}". Motivo: ${flagged.reason}`;
+    } else if (msg) {
+      this.reportReason = `Mensaje inapropiado: "${msg.text}"`;
+    } else {
+      this.reportReason = '';
+    }
+
+    this.showReportModal = true;
+    this.reportSuccess = false;
+    this.isSubmittingReport = false;
+  }
+
+  closeReportModal() {
+    this.showReportModal = false;
+    this.reportedTargetUser = null;
+    this.reportedMessageContent = '';
+    this.reportedMessageIdBeingProcessed = null;
+    this.reportReason = '';
+    this.reportSuccess = false;
+  }
+
+  submitReport() {
+    if (!this.reportedTargetUser || !this.reportReason.trim() || !this.currentUser) return;
+
+    this.isSubmittingReport = true;
+    const currentProductId = this.activeChat?.productId;
+    const currentTargetId = this.reportedTargetUser.id;
+    const currentMsgId = this.reportedMessageIdBeingProcessed;
+
+    this.apiService.createReport({
+      reportedUserId: currentTargetId,
+      productId: currentProductId ? currentProductId : undefined,
+      reason: this.reportReason.trim()
+    }).subscribe({
+      next: () => {
+        this.isSubmittingReport = false;
+        this.reportSuccess = true;
+
+        // Registrar para no permitir volver a enviar el mismo reporte
+        if (currentMsgId) {
+          this.reportedMessageIds.add(currentMsgId);
+        } else {
+          this.reportedUsers.add(currentTargetId);
+        }
+
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.closeReportModal();
+          this.cdr.detectChanges();
+        }, 1800);
+      },
+      error: (err) => {
+        this.isSubmittingReport = false;
+        console.error('Error al enviar reporte:', err);
+        alert(err.error?.error || 'Hubo un error al enviar el reporte.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   isMyMessage(msg: Message): boolean {
