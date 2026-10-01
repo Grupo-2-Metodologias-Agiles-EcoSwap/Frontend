@@ -18,54 +18,6 @@
         <a routerLink="/add-product" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-medium transition-colors text-sm shadow-sm">
           Vende
         </a>
-        
-        <a routerLink="/chat" class="relative text-gray-500 hover:text-green-600 transition-colors p-2">
-          <span class="material-icons">chat</span>
-        </a>
-
-        <div #notificationsDropdown class="relative group p-2 cursor-pointer text-gray-500 hover:text-green-600 transition-colors" (click)="toggleNotifications($event)">
-          <span class="material-icons">notifications</span>
-          <span *ngIf="(unreadCount$ | async) as count" class="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center border border-white">
-            {{ count }}
-          </span>
-
-          <!-- Notifications Dropdown -->
-          <div *ngIf="isNotificationsOpen" class="absolute right-0 mt-4 w-80 bg-white border border-gray-200 divide-y divide-gray-100 rounded-lg shadow-xl origin-top-right z-50 max-h-96 overflow-y-auto cursor-default" (click)="$event.stopPropagation()">
-            <div class="py-3 px-4 font-bold text-gray-800 bg-gray-50 flex justify-between items-center sticky top-0 border-b border-gray-100">
-              Notificaciones
-              <button (click)="toggleNotifications($event)" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <span class="material-icons text-sm">close</span>
-              </button>
-            </div>
-            
-            <div *ngIf="(notifications$ | async)?.length === 0" class="py-8 text-center text-gray-500 text-sm">
-              No tienes notificaciones
-            </div>
-
-            <div class="py-2" *ngFor="let n of (notifications$ | async)">
-              <div class="px-4 py-3 hover:bg-gray-50 transition-colors" [ngClass]="{'bg-green-50/30': !n.read}">
-                <div class="flex justify-between items-start gap-2">
-                  <div class="flex-1">
-                    <p class="text-sm font-medium text-gray-800" [ngClass]="{'font-bold': !n.read}">{{ n.title || (n.type | titlecase) }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ n.message || n.text }}</p>
-                  </div>
-                  <button (click)="deleteNotification(n.id, $event)" class="text-gray-400 hover:text-red-500 transition-colors" title="Eliminar">
-                    <span class="material-icons text-xs">close</span>
-                  </button>
-                </div>
-                
-                <div class="mt-3 flex gap-2">
-                  <button *ngIf="(n.type === 'chat' || n.type === 'message' || n.type === 'purchase') && n.chatId" (click)="goToChat(n.chatId)" class="text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded transition-colors">
-                    Ir al Chat
-                  </button>
-                  <button *ngIf="!n.read" (click)="markAsRead(n, $event)" class="text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600 hover:bg-gray-200 px-2 py-1 rounded transition-colors">
-                    Marcar leído
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div class="relative ml-4 pb-4 pt-4"> <!-- Removed group class here -->
           <button (click)="toggleProfileMenu($event)" class="flex items-center gap-2 text-gray-700 hover:text-green-600 font-medium cursor-pointer transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
@@ -98,9 +50,6 @@
               </a>
               <a routerLink="/my-products" class="text-gray-700 flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors cursor-pointer">
                 <span class="material-icons text-[18px]">inventory_2</span> Mis anuncios
-              </a>
-              <a routerLink="/favorites" class="text-gray-700 flex items-center gap-2 w-full px-4 py-2.5 text-sm hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer">
-                <span class="material-icons text-[18px] text-red-500">favorite</span> Mis Favoritos
               </a>
             </div>
             <div class="py-1 border-t border-gray-100">

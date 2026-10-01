@@ -12,15 +12,6 @@
     </div>
   </div>
 
-  <!-- Favorite Button -->
-  <button (click)="toggleFavorite($event)"
-    class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center z-20 shadow-sm hover:scale-110 transition-transform duration-200">
-    <span class="material-icons text-[18px] transition-colors duration-200"
-      [ngClass]="isFavorite ? 'text-red-500' : 'text-gray-400 hover:text-red-400'">
-      {{ isFavorite ? 'favorite' : 'favorite_border' }}
-    </span>
-  </button>
-
   <!-- Image -->
   <div class="h-52 w-full bg-gray-50 relative overflow-hidden flex-shrink-0">
     <div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors z-10"></div>

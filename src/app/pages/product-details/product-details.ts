@@ -96,84 +96,26 @@ export class ProductDetails implements OnInit {
     return Array(5 - (Math.round(reputation) || 0)).fill(0);
   }
 
-  requestProduct() {
-    if (!this.currentUser || !this.product) return;
-    if (String(this.currentUser.id) === String(this.product.userId)) {
-      alert("No puedes solicitar tu propio producto.");
-      return;
-    }
+  copiedEmail = false;
 
-    // 1. Verificar si ya existe un chat para este producto con este vendedor
-    this.apiService.getChats(this.currentUser.id).subscribe(chats => {
-      const existingChat = chats.find(c => String(c.productId) === String(this.product!.id) && c.participants.map(String).includes(String(this.product!.userId)));
-
-      if (existingChat) {
-        // Enviar notificación al vendedor vinculada al chat existente
-        this.apiService.createNotification({
-          userId: this.product!.userId,
-          type: 'purchase',
-          chatId: existingChat.id,
-          text: `${this.currentUser!.name} quiere comprar tu producto "${this.product!.title}".`,
-          read: false
-        }).subscribe();
-
-        alert(`Ya has solicitado este producto. Te estamos redirigiendo al chat.`);
-        this.router.navigate(['/chat'], { queryParams: { chatId: existingChat.id } });
-      } else {
-        // 2. Si no existe, crear la reunión/chat
-        const newChat: Partial<Chat> = {
-          productId: this.product!.id,
-          participants: [String(this.currentUser!.id), String(this.product!.userId)],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-
-        this.apiService.createChat(newChat).subscribe(createdChat => {
-          // Crear la notificación vinculada al nuevo chat
-          this.apiService.createNotification({
-            userId: this.product!.userId,
-            type: 'purchase',
-            chatId: createdChat.id,
-            text: `${this.currentUser!.name} quiere comprar tu producto "${this.product!.title}".`,
-            read: false
-          }).subscribe();
-
-          alert(`Has solicitado el producto: ${this.product?.title}. Te estamos redirigiendo al chat con el vendedor.`);
-          this.router.navigate(['/chat'], { queryParams: { chatId: createdChat.id } });
-        });
-      }
-    });
+  contactSellerByEmail() {
+    if (!this.seller?.email || !this.product) return;
+    const subject = encodeURIComponent(`EcoSwap - Consulta sobre: ${this.product.title}`);
+    const body = encodeURIComponent(
+      `Hola ${this.seller.name},\n\nTe contacto a través de EcoSwap porque me interesa tu producto "${this.product.title}" (Precio: S/ ${this.product.price}).\n\n¿Sigue disponible para coordinar la entrega en campus?\n\nSaludos,\n${this.currentUser?.name || ''}`
+    );
+    window.location.href = `mailto:${this.seller.email}?subject=${subject}&body=${body}`;
   }
 
-  contactSeller() {
-    if (!this.currentUser || !this.product) return;
-    if (String(this.currentUser.id) === String(this.product.userId)) {
-      alert('No puedes contactarte a ti mismo.');
-      return;
-    }
-
-    // Check if a chat already exists
-    this.apiService.getChats(this.currentUser.id).subscribe((chats) => {
-      const existingChat = chats.find(
-        (c) =>
-          String(c.productId) === String(this.product!.id) &&
-          c.participants.map(String).includes(String(this.product!.userId)),
-      );
-
-      if (existingChat) {
-        this.router.navigate(['/chat'], { queryParams: { chatId: existingChat.id } });
-      } else {
-        // Create new chat
-        const newChat: Partial<Chat> = {
-          productId: this.product!.id,
-          participants: [String(this.currentUser!.id), String(this.product!.userId)],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        this.apiService.createChat(newChat).subscribe((createdChat) => {
-          this.router.navigate(['/chat'], { queryParams: { chatId: createdChat.id } });
-        });
-      }
+  copyEmail() {
+    if (!this.seller?.email) return;
+    navigator.clipboard.writeText(this.seller.email).then(() => {
+      this.copiedEmail = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.copiedEmail = false;
+        this.cdr.detectChanges();
+      }, 2500);
     });
   }
 }

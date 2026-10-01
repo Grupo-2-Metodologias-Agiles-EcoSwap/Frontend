@@ -27,13 +27,7 @@ export class Navbar implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.notificationService.initForUser(user.id);
-      } else {
-        this.notificationService.stopPolling();
-      }
-    });
+    // Polling de notificaciones desactivado para la entrega del Trabajo Parcial (Disponible en Trabajo Final)
   }
 
   @ViewChild('notificationsDropdown') notificationsDropdown!: ElementRef;

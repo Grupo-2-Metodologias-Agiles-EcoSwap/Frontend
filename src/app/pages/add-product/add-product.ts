@@ -169,62 +169,21 @@ export class AddProduct implements OnInit {
         subject: formValue.subcategoryId
       };
 
-      // Validación preventiva con IA
-      this.apiService.moderateProduct({
-        title: formValue.title,
-        description: formValue.description,
-        category: selectedCategory,
-        imagesBase64: this.imagesBase64
-      }).subscribe({
-        next: (modResult) => {
-          if (!modResult.allowed) {
-            this.isCheckingModeration = false;
-            this.moderationError = modResult.reason;
-            this.moderationCategory = modResult.category;
-            this.cdr.detectChanges();
-            return;
-          }
-
-          console.log('Moderación IA aprobada. Enviando producto...');
-          this.apiService.addProduct(newProduct).subscribe({
-            next: () => {
-              this.isCheckingModeration = false;
-              this.success = true;
-              this.cdr.detectChanges();
-              setTimeout(() => {
-                this.router.navigate(['/my-products']);
-              }, 1500);
-            },
-            error: (err) => {
-              this.isCheckingModeration = false;
-              if (err.status === 422 && err.error?.isModerated) {
-                this.moderationError = err.error.error;
-                this.moderationCategory = err.error.category;
-              } else {
-                alert(err.error?.error || 'Error al guardar el producto');
-              }
-              this.cdr.detectChanges();
-            }
-          });
+      // Guardado directo para Trabajo Parcial (Moderación con IA reservada para Trabajo Final)
+      this.isCheckingModeration = true;
+      this.apiService.addProduct(newProduct).subscribe({
+        next: () => {
+          this.isCheckingModeration = false;
+          this.success = true;
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.router.navigate(['/my-products']);
+          }, 1500);
         },
         error: (err) => {
-          // Si el servicio de moderación tiene algún fallo, permitimos el flujo normal
-          console.warn('Fallback: servicio de moderación no disponible, procediendo:', err);
-          this.apiService.addProduct(newProduct).subscribe({
-            next: () => {
-              this.isCheckingModeration = false;
-              this.success = true;
-              this.cdr.detectChanges();
-              setTimeout(() => {
-                this.router.navigate(['/my-products']);
-              }, 1500);
-            },
-            error: (saveErr) => {
-              this.isCheckingModeration = false;
-              alert(saveErr.error?.error || 'Error al guardar el producto');
-              this.cdr.detectChanges();
-            }
-          });
+          this.isCheckingModeration = false;
+          alert(err.error?.error || 'Error al guardar el producto');
+          this.cdr.detectChanges();
         }
       });
     }

@@ -173,73 +173,26 @@ export class Home implements OnInit {
       images: this.postImageBase64 ? [this.postImageBase64] : []
     };
 
-    // Moderación preventiva con Gemini IA
-    this.apiService.moderateProduct({
-      title: finalTitle,
-      description: this.postContent.trim(),
-      category: selectedCategoryName,
-      imagesBase64: this.postImageBase64 ? [this.postImageBase64] : []
-    }).subscribe({
-      next: (modResult) => {
-        if (!modResult.allowed) {
-          this.isPublishing = false;
-          this.moderationError = modResult.reason;
-          this.moderationCategory = modResult.category;
-          this.cdr.detectChanges();
-          return;
-        }
+    // Guardado directo para Trabajo Parcial (Moderación con IA reservada para Trabajo Final)
+    this.apiService.addProduct(newPost).subscribe({
+      next: (createdPost) => {
+        // Reset form
+        this.postContent = '';
+        this.postImageBase64 = null;
+        this.postPrice = null;
+        this.showDetails = false;
+        this.isPublishing = false;
+        this.moderationError = null;
+        this.moderationCategory = null;
 
-        // Si es aprobado, procedemos a guardar
-        this.apiService.addProduct(newPost).subscribe({
-          next: (createdPost) => {
-            // Reset form
-            this.postContent = '';
-            this.postImageBase64 = null;
-            this.postPrice = null;
-            this.showDetails = false;
-            this.isPublishing = false;
-            this.moderationError = null;
-            this.moderationCategory = null;
-
-            alert('Publicación creada con éxito. Puedes verla en la sección de tus productos.');
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.error('Error publishing post', err);
-            this.isPublishing = false;
-            if (err.status === 422 && err.error?.isModerated) {
-              this.moderationError = err.error.error;
-              this.moderationCategory = err.error.category;
-            } else {
-              alert(err.error?.error || 'Error al publicar.');
-            }
-            this.cdr.detectChanges();
-          }
-        });
+        alert('Publicación creada con éxito. Puedes verla en la sección de tus productos.');
+        this.cdr.detectChanges();
       },
-      error: () => {
-        // Fallback: si falla el servicio de IA, enviamos directamente
-        this.apiService.addProduct(newPost).subscribe({
-          next: () => {
-            this.postContent = '';
-            this.postImageBase64 = null;
-            this.postPrice = null;
-            this.showDetails = false;
-            this.isPublishing = false;
-            alert('Publicación creada con éxito.');
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            this.isPublishing = false;
-            if (err.status === 422 && err.error?.isModerated) {
-              this.moderationError = err.error.error;
-              this.moderationCategory = err.error.category;
-            } else {
-              alert(err.error?.error || 'Error al publicar.');
-            }
-            this.cdr.detectChanges();
-          }
-        });
+      error: (err) => {
+        console.error('Error publishing post', err);
+        this.isPublishing = false;
+        alert(err.error?.error || 'Error al publicar.');
+        this.cdr.detectChanges();
       }
     });
   }

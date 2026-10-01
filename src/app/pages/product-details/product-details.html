@@ -88,30 +88,32 @@
             </div>
 
             <div class="space-y-3">
-              <ng-container *ngIf="product.type !== 'wanted'">
-                <button (click)="requestProduct()"
-                  class="w-full bg-gradient-to-r from-blue-500 to-green-400 hover:from-blue-600 hover:to-green-500 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center gap-2">
-                  <span class="material-icons">shopping_cart</span>
-                  Comprar Producto
+              <ng-container *ngIf="!isOwner">
+                <button (click)="contactSellerByEmail()"
+                  class="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center gap-2">
+                  <span class="material-icons">email</span>
+                  Contactar al Estudiante por Correo
                 </button>
-                <button *ngIf="currentUser?.id !== product.userId" (click)="contactSeller()"
-                  class="w-full bg-white border-2 border-green-500 text-green-600 hover:bg-green-50 font-bold py-4 px-8 rounded-xl shadow-sm transition-transform hover:scale-105 flex justify-center items-center gap-2">
-                  <span class="material-icons">chat</span>
-                  Preguntar al Vendedor
-                </button>
+
+                <div *ngIf="seller?.email" class="bg-blue-50/60 border border-blue-100 rounded-xl p-3 flex items-center justify-between">
+                  <div class="flex items-center gap-2 text-sm text-gray-700">
+                    <span class="material-icons text-blue-500 text-base">school</span>
+                    <span class="font-medium text-gray-800">{{ seller?.email }}</span>
+                  </div>
+                  <button (click)="copyEmail()" class="text-xs text-blue-600 hover:text-blue-800 font-bold px-2 py-1 rounded hover:bg-blue-100/60 transition-colors">
+                    {{ copiedEmail ? '¡Copiado!' : 'Copiar' }}
+                  </button>
+                </div>
               </ng-container>
-              <ng-container *ngIf="product.type === 'wanted'">
-                <button *ngIf="currentUser?.id !== product.userId" (click)="contactSeller()"
-                  class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center gap-2">
-                  <span class="material-icons">waving_hand</span>
-                  ¡Yo lo tengo! Ofrecer
-                </button>
-              </ng-container>
+
+              <div *ngIf="isOwner" class="p-4 bg-gray-50 border border-gray-200 rounded-xl text-center">
+                <p class="text-sm font-bold text-gray-700">Eres el autor de esta publicación</p>
+                <p class="text-xs text-gray-500 mt-1">Puedes gestionarla o editarla desde "Mis Anuncios".</p>
+              </div>
             </div>
 
             <p class="text-center text-xs text-gray-500 mt-4">
-              {{ product.type === 'wanted' ? 'Contacta al comprador para negociar la entrega' : 'La solicitud notificará
-              al vendedor a través de EcoSwap' }}
+              Coordinación directa a través del correo institucional UPC del estudiante.
             </p>
           </div>
         </div>
