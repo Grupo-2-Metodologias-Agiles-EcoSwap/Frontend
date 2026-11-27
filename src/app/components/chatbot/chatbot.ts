@@ -117,6 +117,13 @@ export class Chatbot implements OnInit, OnDestroy {
     });
   }
 
+  onEnter(event: KeyboardEvent) {
+    // Se ignora el Enter que confirma un acento o composición de texto (IME)
+    if (event.isComposing) return;
+    event.preventDefault();
+    this.send();
+  }
+
   openProduct(product: ChatbotProduct) {
     // Se cierra el panel para que no tape los botones de compra del detalle
     this.isOpen = false;
