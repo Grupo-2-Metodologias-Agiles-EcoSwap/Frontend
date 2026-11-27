@@ -67,12 +67,38 @@
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-1">Nombre del producto</label>
             <input type="text" formControlName="title" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 transition-all" placeholder="Ej. Calculadora Científica Casio">
+            <button type="button"
+                    (click)="generateTitle()"
+                    [disabled]="isGeneratingTitle || isCompressing || imagesBase64.length === 0"
+                    class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <ng-container *ngIf="!isGeneratingTitle">
+                <span class="material-icons text-base">auto_awesome</span>
+                Generar con IA
+              </ng-container>
+              <ng-container *ngIf="isGeneratingTitle">
+                <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                Generando...
+              </ng-container>
+            </button>
           </div>
           
           <!-- Descripcion -->
           <div>
             <label class="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
             <textarea formControlName="description" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 transition-all resize-none h-32" placeholder="Describe el estado de tu producto, si tiene detalles, etc."></textarea>
+            <button type="button"
+                    (click)="generateDescription()"
+                    [disabled]="isGeneratingDescription || isCompressing || (!productForm.value.title && imagesBase64.length === 0)"
+                    class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              <ng-container *ngIf="!isGeneratingDescription">
+                <span class="material-icons text-base">auto_awesome</span>
+                Generar con IA
+              </ng-container>
+              <ng-container *ngIf="isGeneratingDescription">
+                <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                Generando...
+              </ng-container>
+            </button>
           </div>
           
           <div class="grid grid-cols-2 gap-4">
@@ -85,6 +111,19 @@
                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">S/</span>
                 <input type="number" formControlName="price" class="w-full bg-gray-50 rounded-xl pl-9 pr-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 transition-all" placeholder="0.00">
               </div>
+              <button type="button"
+                      (click)="generatePrice()"
+                      [disabled]="isGeneratingPrice || isCompressing || (!productForm.value.title && imagesBase64.length === 0)"
+                      class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <ng-container *ngIf="!isGeneratingPrice">
+                  <span class="material-icons text-base">auto_awesome</span>
+                  Sugerir precio
+                </ng-container>
+                <ng-container *ngIf="isGeneratingPrice">
+                  <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                  Calculando...
+                </ng-container>
+              </button>
             </div>
             
             <!-- Estado -->
@@ -98,6 +137,37 @@
                 <option value="used">Usado</option>
                 <option *ngIf="productForm.value.type === 'wanted'" value="any">Indiferente (Nuevo o Usado)</option>
               </select>
+              <!-- Botón IA solo aplica cuando el usuario vende (tiene fotos del producto real) -->
+              <ng-container *ngIf="productForm.value.type === 'sale'">
+                <button type="button"
+                        (click)="generateStatus()"
+                        [disabled]="isGeneratingStatus || isCompressing || imagesBase64.length === 0"
+                        class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  <ng-container *ngIf="!isGeneratingStatus">
+                    <span class="material-icons text-base">auto_awesome</span>
+                    Evaluar con IA
+                  </ng-container>
+                  <ng-container *ngIf="isGeneratingStatus">
+                    <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                    Evaluando...
+                  </ng-container>
+                </button>
+                <!-- Chip de sugerencia — el usuario decide si aplicar -->
+                <div *ngIf="suggestedStatus" class="mt-2 flex items-center gap-2 p-2.5 rounded-xl bg-violet-50 border border-violet-200">
+                  <span class="material-icons text-violet-500 text-base">lightbulb</span>
+                  <span class="text-xs text-violet-800 font-medium flex-1">
+                    La IA sugiere: <strong>{{ suggestedStatus === 'new' ? 'Nuevo' : 'Usado' }}</strong>
+                  </span>
+                  <button type="button" (click)="applySuggestedStatus()"
+                          class="text-xs font-bold px-3 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-colors">
+                    Aplicar
+                  </button>
+                  <button type="button" (click)="suggestedStatus = null"
+                          class="text-violet-400 hover:text-violet-600 transition-colors">
+                    <span class="material-icons text-sm">close</span>
+                  </button>
+                </div>
+              </ng-container>
             </div>
           </div>
           
@@ -109,12 +179,38 @@
                 <option value="" disabled selected>Elegir</option>
                 <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
               </select>
+              <button type="button"
+                      (click)="generateCategory()"
+                      [disabled]="isGeneratingCategory || isCompressing || (!productForm.value.title && imagesBase64.length === 0) || categories.length === 0"
+                      class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <ng-container *ngIf="!isGeneratingCategory">
+                  <span class="material-icons text-base">auto_awesome</span>
+                  Detectar con IA
+                </ng-container>
+                <ng-container *ngIf="isGeneratingCategory">
+                  <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                  Detectando...
+                </ng-container>
+              </button>
             </div>
             
             <!-- Subcategoria -->
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-1">Curso / Subtipo</label>
               <input type="text" formControlName="subcategoryId" class="w-full bg-gray-50 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200 transition-all" placeholder="Opcional">
+              <button type="button"
+                      (click)="generateSubject()"
+                      [disabled]="isGeneratingSubject || isCompressing || (!productForm.value.title && imagesBase64.length === 0)"
+                      class="mt-2 flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl border border-violet-300 text-violet-700 bg-violet-50 hover:bg-violet-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                <ng-container *ngIf="!isGeneratingSubject">
+                  <span class="material-icons text-base">auto_awesome</span>
+                  Inferir con IA
+                </ng-container>
+                <ng-container *ngIf="isGeneratingSubject">
+                  <div class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-violet-600"></div>
+                  Infiriendo...
+                </ng-container>
+              </button>
             </div>
           </div>
         </div>

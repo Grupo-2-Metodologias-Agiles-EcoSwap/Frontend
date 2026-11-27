@@ -19,6 +19,13 @@ export class AddProduct implements OnInit {
   imagesBase64: string[] = [];
   isCompressing: boolean = false;
   isCheckingModeration: boolean = false;
+  isGeneratingDescription: boolean = false;
+  isGeneratingTitle: boolean = false;
+  isGeneratingPrice: boolean = false;
+  isGeneratingCategory: boolean = false;
+  isGeneratingSubject: boolean = false;
+  isGeneratingStatus: boolean = false;
+  suggestedStatus: 'new' | 'used' | null = null;
   moderationError: string | null = null;
   moderationCategory: string | null = null;
   previewImage: string | null = null;
@@ -142,6 +149,184 @@ export class AddProduct implements OnInit {
         };
       };
     });
+  }
+
+  generateDescription() {
+    const { title, type, status, subcategoryId } = this.productForm.value;
+    const selectedCategory = this.categories.find(c => c.id === this.productForm.value.categoryId)?.name || '';
+
+    this.isGeneratingDescription = true;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      title: title || undefined,
+      category: selectedCategory || undefined,
+      type: type || undefined,
+      status: status || undefined,
+      subject: subcategoryId || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['description'],
+    }).subscribe({
+      next: (res) => {
+        if (res.description) this.productForm.patchValue({ description: res.description });
+        this.isGeneratingDescription = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generateDescription] error:', err);
+        this.isGeneratingDescription = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateTitle() {
+    const { type, status, subcategoryId } = this.productForm.value;
+    const selectedCategory = this.categories.find(c => c.id === this.productForm.value.categoryId)?.name || '';
+
+    this.isGeneratingTitle = true;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      category: selectedCategory || undefined,
+      type: type || undefined,
+      status: status || undefined,
+      subject: subcategoryId || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['title'],
+    }).subscribe({
+      next: (res) => {
+        if (res.title) this.productForm.patchValue({ title: res.title });
+        this.isGeneratingTitle = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generateTitle] error:', err);
+        this.isGeneratingTitle = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generatePrice() {
+    const { title, type, status, subcategoryId } = this.productForm.value;
+    const selectedCategory = this.categories.find(c => c.id === this.productForm.value.categoryId)?.name || '';
+
+    this.isGeneratingPrice = true;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      title: title || undefined,
+      category: selectedCategory || undefined,
+      type: type || undefined,
+      status: status || undefined,
+      subject: subcategoryId || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['price'],
+    }).subscribe({
+      next: (res) => {
+        if (res.price != null) this.productForm.patchValue({ price: res.price });
+        this.isGeneratingPrice = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generatePrice] error:', err);
+        this.isGeneratingPrice = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateCategory() {
+    const { title, type, status, subcategoryId } = this.productForm.value;
+
+    this.isGeneratingCategory = true;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      title: title || undefined,
+      type: type || undefined,
+      status: status || undefined,
+      subject: subcategoryId || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['categoryId'],
+      availableCategories: this.categories.map(c => ({ id: c.id, name: c.name })),
+    }).subscribe({
+      next: (res) => {
+        if (res.categoryId != null) this.productForm.patchValue({ categoryId: res.categoryId });
+        this.isGeneratingCategory = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generateCategory] error:', err);
+        this.isGeneratingCategory = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateSubject() {
+    const { title, type, subcategoryId } = this.productForm.value;
+    const selectedCategory = this.categories.find(c => c.id === this.productForm.value.categoryId)?.name || '';
+
+    this.isGeneratingSubject = true;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      title: title || undefined,
+      category: selectedCategory || undefined,
+      type: type || undefined,
+      subject: subcategoryId || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['subject'],
+    }).subscribe({
+      next: (res) => {
+        if (res.subject != null) this.productForm.patchValue({ subcategoryId: res.subject });
+        this.isGeneratingSubject = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generateSubject] error:', err);
+        this.isGeneratingSubject = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateStatus() {
+    const { title, type } = this.productForm.value;
+    const selectedCategory = this.categories.find(c => c.id === this.productForm.value.categoryId)?.name || '';
+
+    this.isGeneratingStatus = true;
+    this.suggestedStatus = null;
+    this.cdr.detectChanges();
+
+    this.apiService.generateFields({
+      title: title || undefined,
+      category: selectedCategory || undefined,
+      type: type || undefined,
+      imagesBase64: this.imagesBase64.length > 0 ? this.imagesBase64 : undefined,
+      fields: ['status'],
+    }).subscribe({
+      next: (res) => {
+        this.suggestedStatus = res.status ?? null;
+        this.isGeneratingStatus = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('[generateStatus] error:', err);
+        this.isGeneratingStatus = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  applySuggestedStatus() {
+    if (this.suggestedStatus) {
+      this.productForm.patchValue({ status: this.suggestedStatus });
+      this.suggestedStatus = null;
+      this.cdr.detectChanges();
+    }
   }
 
   onSubmit() {

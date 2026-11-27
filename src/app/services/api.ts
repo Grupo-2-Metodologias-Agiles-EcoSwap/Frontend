@@ -464,4 +464,42 @@ export class ApiService {
   moderateMessage(content: string): Observable<{ allowed: boolean; reason: string; category: string | null }> {
     return this.http.post<{ allowed: boolean; reason: string; category: string | null }>(`${this.apiUrl}/ai/moderate-message`, { content });
   }
+
+  generateDescription(data: {
+    title?: string;
+    category?: string;
+    type?: 'sale' | 'wanted';
+    status?: string;
+    subject?: string;
+    imagesBase64?: string[];
+  }): Observable<{ description: string }> {
+    return this.http.post<{ description: string }>(`${this.apiUrl}/ai/generate-description`, data);
+  }
+
+  generateFields(data: {
+    title?: string;
+    category?: string;
+    type?: 'sale' | 'wanted';
+    status?: string;
+    subject?: string;
+    imagesBase64?: string[];
+    fields: ('title' | 'price' | 'description' | 'categoryId' | 'subject' | 'status')[];
+    availableCategories?: { id: string | number; name: string }[];
+  }): Observable<{
+    title?: string | null;
+    price?: number | null;
+    description?: string | null;
+    categoryId?: string | number | null;
+    subject?: string | null;
+    status?: 'new' | 'used' | null;
+  }> {
+    return this.http.post<{
+      title?: string | null;
+      price?: number | null;
+      description?: string | null;
+      categoryId?: string | number | null;
+      subject?: string | null;
+      status?: 'new' | 'used' | null;
+    }>(`${this.apiUrl}/ai/generate-fields`, data);
+  }
 }
