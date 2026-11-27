@@ -1,0 +1,101 @@
+<ng-container *ngIf="isLoggedIn && !isHiddenRoute">
+  <!-- Panel del asistente -->
+  <div *ngIf="isOpen"
+       class="fixed z-50 bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-96 h-[32rem] max-h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden">
+
+    <!-- Encabezado -->
+    <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-500 to-green-400 text-white">
+      <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+        <span class="material-icons">smart_toy</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="font-bold leading-tight">EcoBot</p>
+        <p class="text-xs text-white/90 leading-tight">Asistente virtual de EcoSwap</p>
+      </div>
+      <button type="button" *ngIf="messages.length > 0" (click)="clearConversation()"
+              class="p-1.5 rounded-full hover:bg-white/20 transition-colors" title="Nueva conversación">
+        <span class="material-icons text-[20px]">refresh</span>
+      </button>
+      <button type="button" (click)="toggle()"
+              class="p-1.5 rounded-full hover:bg-white/20 transition-colors" title="Cerrar">
+        <span class="material-icons text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Mensajes -->
+    <div #messagesContainer class="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+      <!-- Bienvenida -->
+      <div *ngIf="messages.length === 0" class="space-y-3">
+        <div class="bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 text-sm text-gray-700 shadow-sm">
+          ¡Hola! Soy EcoBot. Puedo ayudarte a encontrar materiales en el catálogo o explicarte cómo publicar, comprar o coordinar un intercambio.
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" *ngFor="let s of suggestions" (click)="send(s)"
+                  class="text-xs font-medium px-3 py-1.5 rounded-full border border-green-300 text-green-700 bg-white hover:bg-green-50 transition-colors">
+            {{ s }}
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngFor="let m of messages">
+        <!-- Mensaje del estudiante -->
+        <div *ngIf="m.role === 'user'" class="flex justify-end">
+          <div class="max-w-[85%] bg-gradient-to-r from-blue-500 to-green-400 text-white rounded-2xl rounded-tr-sm px-4 py-2 text-sm whitespace-pre-line break-words shadow-sm">
+            {{ m.text }}
+          </div>
+        </div>
+
+        <!-- Respuesta del asistente -->
+        <div *ngIf="m.role === 'assistant'" class="flex flex-col items-start gap-2">
+          <div class="max-w-[85%] rounded-2xl rounded-tl-sm px-4 py-2 text-sm whitespace-pre-line break-words shadow-sm border"
+               [ngClass]="m.isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-gray-200 text-gray-700'">
+            {{ m.text }}
+          </div>
+
+          <!-- Productos recomendados -->
+          <div *ngIf="m.products?.length" class="w-full space-y-2">
+            <button type="button" *ngFor="let p of m.products" (click)="openProduct(p)"
+                    class="w-full flex items-center gap-3 p-2 bg-white border border-gray-200 rounded-xl hover:border-green-400 hover:shadow-md transition-all text-left">
+              <img *ngIf="p.image" [src]="p.image" [alt]="p.title" class="w-12 h-12 rounded-lg object-cover flex-shrink-0 bg-gray-100">
+              <div *ngIf="!p.image" class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                <span class="material-icons text-gray-400">inventory_2</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-gray-800 truncate">{{ p.title }}</p>
+                <p class="text-xs text-gray-500">{{ p.type === 'wanted' ? 'Solicitud' : 'En venta' }}</p>
+              </div>
+              <span *ngIf="p.price != null" class="text-sm font-bold text-blue-600 flex-shrink-0">S/ {{ p.price }}</span>
+              <span class="material-icons text-gray-400 text-[18px]">chevron_right</span>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Escribiendo... -->
+      <div *ngIf="isSending" class="flex items-center gap-1 bg-white border border-gray-200 rounded-2xl rounded-tl-sm px-4 py-3 w-fit shadow-sm">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-bounce"></span>
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-bounce [animation-delay:150ms]"></span>
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-bounce [animation-delay:300ms]"></span>
+      </div>
+    </div>
+
+    <!-- Entrada -->
+    <form (ngSubmit)="send()" class="flex items-center gap-2 px-3 py-3 border-t border-gray-200 bg-white">
+      <input #messageInput type="text" name="draft" [(ngModel)]="draft" maxlength="1000" autocomplete="off"
+             placeholder="Escribe tu pregunta..."
+             class="flex-1 bg-gray-50 rounded-full px-4 py-2 text-sm text-gray-800 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-400">
+      <button type="submit" [disabled]="isSending || !draft.trim()"
+              class="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-green-400 text-white flex items-center justify-center shadow hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Enviar">
+        <span class="material-icons text-[20px]">send</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Botón flotante -->
+  <button type="button" (click)="toggle()"
+          class="fixed z-50 bottom-6 right-4 sm:right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-green-400 text-white shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+          [title]="isOpen ? 'Cerrar asistente' : 'Abrir asistente EcoBot'">
+    <span class="material-icons text-[28px]">{{ isOpen ? 'close' : 'smart_toy' }}</span>
+  </button>
+</ng-container>
